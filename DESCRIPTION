@@ -1,12 +1,12 @@
 Package: BayeSSD
-Title: Bayesian Sample Size Determination
+Title: Package for Bayesian Sample Size Determination
 Version: 0.1.0
 Authors@R: 
     person(given = "Ulrich", 
            family = "Lösener",
+           role = c("aut", "cre"),
            email = "u.c.losener1@uu.nl", 
-           role = c("aut", "cre")),
-           comment = c(ORCID = "0009-0007-2121-7427")
+           comment = c(ORCID = "0009-0007-2121-7427"))
 Description: This package performs simulation-based Bayesian sample size determination for longitudinal experiments.
 License: MIT + file LICENSE
 Encoding: UTF-8
