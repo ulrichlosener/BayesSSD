@@ -139,13 +139,13 @@ get_neff_mis_mv <- function(model, N, t.points, surviv) {
       X_interv_sub <- X_interv[rows, , drop = FALSE]
 
       # Take sums for all three conditions
-      sum_mat <- sum_mat + surviv[k] * (
+      sum_mat <- sum_mat + surviv[[1]][k] * (
         t(X_wl_sub) %*% inv$V_inv %*% X_wl_sub +
           t(X_tau_sub) %*% inv$V_inv %*% X_tau_sub +
           t(X_interv_sub) %*% inv$V_inv %*% X_interv_sub
       )
 
-      sum_mat_indep <- sum_mat_indep + surviv[k] * (
+      sum_mat_indep <- sum_mat_indep + surviv[[1]][k] * (
         t(X_wl_sub) %*% inv$W_inv %*% X_wl_sub +
           t(X_tau_sub) %*% inv$W_inv %*% X_tau_sub +
           t(X_interv_sub) %*% inv$W_inv %*% X_interv_sub

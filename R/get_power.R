@@ -1,8 +1,3 @@
-#===============================================================================
-# Function for power calculation with Missing Data Patterns for three groups
-#===============================================================================
-
-
 #' Bayesian power calculation with attrition for three treatment conditions
 #'
 #' @param attrition The attrition pattern (FALSE for no attrition, otherwise "weibull", "modified_weibull", "linear_exponential", "log_logistic", "gompertz" or "non-parametric")
@@ -16,11 +11,13 @@
 #' @param var.e The residual variance.
 #' @param eff.sizes The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.
 #' @param fraction The fraction of information used to construct the prior for the Bayes Factor.
-#' @param log.grow Use log-linear growth?#' @param var.u0
+#' @param log.grow Use log-linear growth?
 #' @param BFthres The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.
 #' @param seed Set a seed for reproducibility
 #' @param hypothesis The hypothesis to be evaluated. Treatment groups are coded as "a", "b", "c", etc.
 #' @param PMPthres The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.
+#' @importFrom future plan
+#' @importFrom future.apply future_lapply
 #' @export
 #' @return Returns the power when using a Bayes Factor and the power when using Posterior Model Probabilities.
 #'
@@ -40,18 +37,18 @@ getpower_mis_mv <- function(attrition="weibull", params=c(.5,1),
 
   if(!is.null(seed)) {set.seed(seed)}  # set user-specified seed for reproducibility
 
-  plan(multisession, workers = availableCores() - 1)  # Use all but one core
+  future::plan(future::multisession, workers = future::availableCores() - 1)  # Use all but one core
 
   Ns <- rep(N, m)  # object to use lapply on with first argument for the function (N)
   suppressMessages({
-    bfs <- future_lapply(Ns, getbf_mis_mv, attrition=attrition,
-                         params=params, hypothesis=hypothesis, t.points=t.points,
-                         var.u0=var.u0, var.u1=var.u1, cov=cov, var.e=var.e,
-                         eff.sizes=eff.sizes, fraction=fraction, log.grow=log.grow,
-                         future.seed = TRUE)
+    bfs <- future.apply::future_lapply(Ns, getbf_mis_mv, attrition=attrition,
+                                       params=params, hypothesis=hypothesis, t.points=t.points,
+                                       var.u0=var.u0, var.u1=var.u1, cov=cov, var.e=var.e,
+                                       eff.sizes=eff.sizes, fraction=fraction, log.grow=log.grow,
+                                       future.seed = TRUE)
   })
 
-  plan(sequential)  # Reset plan to avoid unexpected parallel behavior later
+  future::plan(future::sequential)  # Reset plan to avoid unexpected parallel behavior later
 
   bf <- sapply(bfs, function(x) x[1])
   pmp <- sapply(bfs, function(x) x[2])

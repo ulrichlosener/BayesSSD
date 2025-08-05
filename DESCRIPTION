@@ -11,4 +11,7 @@ RoxygenNote: 7.3.2
 Imports:
     MASS,
     Matrix,
-    lme4
+    lme4,
+    future,
+    future.apply,
+    bain

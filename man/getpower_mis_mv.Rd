@@ -48,7 +48,7 @@ getpower_mis_mv(
 
 \item{fraction}{The fraction of information used to construct the prior for the Bayes Factor.}
 
-\item{log.grow}{Use log-linear growth?#' @param var.u0}
+\item{log.grow}{Use log-linear growth?}
 
 \item{seed}{Set a seed for reproducibility}
 
