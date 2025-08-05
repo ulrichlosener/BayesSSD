@@ -23,7 +23,7 @@
 #' @param N_max The maximum sample size to be considered. Lower values speed up performance.
 #'
 #' @return Returns the sample size (number of subjects) necessary to achieve the desired power level (eta).
-#'
+#' @export
 #' @examples
 #' BayeSSD(eta=.8, attrition="weibull", params=c(.5,1),
 #' m=100, t.points=c(0,1,2,3,4), var.u0=0.01,

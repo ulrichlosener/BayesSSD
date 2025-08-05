@@ -11,7 +11,7 @@
 #' @importFrom Matrix bdiag
 #' @importFrom Matrix Diagonal
 #' @importFrom MASS ginv
-#'
+#' @export
 #' @examples library(lme4)
 #' library(Matrix)
 #' library(MASS)

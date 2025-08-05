@@ -5,7 +5,7 @@
 #' @param params List with either 1 element or g elements. Each element contains the parameters for the respective survival function.
 #' @param t.points Vector containing the measurement occasions.
 #' @return Returns the proportion of individuals still remaining in the study at each timepoint.
-#'
+#' @export
 #' @examples survival(distributions="weibull", params=list(c(.5, 1)), t.points=c(0,1,2,3,4))
 
 survival <- function(distributions, params, t.points) {

@@ -21,7 +21,7 @@
 #' @param seed Set a seed for reproducibility
 #' @param hypothesis The hypothesis to be evaluated. Treatment groups are coded as "a", "b", "c", etc.
 #' @param PMPthres The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.
-#'
+#' @export
 #' @return Returns the power when using a Bayes Factor and the power when using Posterior Model Probabilities.
 #'
 #' @examples

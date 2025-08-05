@@ -12,7 +12,7 @@
 #' @param eff.sizes The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.
 #' @param fraction The fraction of information used to construct the prior for the Bayes Factor.
 #' @param log.grow Use log-linear growth?
-#'
+#' @export
 #' @return Returns the Bayes Factor or Posterior Model Probabilities for the hypothesis.
 #'
 #' @examples getbf_mis_mv()
