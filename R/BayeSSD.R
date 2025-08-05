@@ -30,7 +30,7 @@
 #' var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .8, .8),
 #' BFthres=5, fraction=1, log.grow=F, seed=NULL,
 #' hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.001,
-#' N_max=1000) {
+#' N_max=1000)
 
 BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
                     m=100, t.points=c(0,1,2,3,4), var.u0=0.01,

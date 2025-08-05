@@ -7,7 +7,7 @@
 #'
 #' @return Returns the effective sample size for each of the three treatment conditions.
 #' @importFrom lme4 VarCorr
-#' @importFrom lme4 getMe
+#' @importFrom lme4 getME
 #' @importFrom Matrix bdiag
 #' @importFrom Matrix Diagonal
 #' @importFrom MASS ginv
