@@ -45,7 +45,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
   if(!is.logical(log.grow)) {stop("'log.grow' must be either TRUE or FALSE.")}
   if(is.logical(sensitivity)==F) {stop("'sensitivity' must be either TRUE or FALSE.")}
   if(any(t.points<0)) {stop("all time points must be positive.")}
-  if(var.u0<0 | var.u1<0 | cov<0 | var.e<0) {stop("all variance components must be positive.")}
+  if(var.u0<0 | var.u1<0 | var.e<0) {stop("all variance components must be positive.")}
   if(BFthres<0) {stop("'BFthres' must be positive.")}
   if(fraction%%1!=0 | fraction<1) {stop("'fraction' must be a positive integer, b=fraction/N.")}
   if(m<1000) {warning("Results with less than 1000 generated datasets per iteration can be unreliable.")}
