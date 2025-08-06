@@ -37,7 +37,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
                     var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .5, .8),
                     BFthres=5, fraction=1, log.grow=F, seed=NULL,
                     hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.001,
-                    N_max=1000) {
+                    N_max=1000, method="bfc") {
 
   # error and warning messages in case of incorrect input
   if(eta<0 | eta>1) {stop("'eta' (the desired power level) must be between 0 and 1.")}
@@ -49,6 +49,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
   if(BFthres<0) {stop("'BFthres' must be positive.")}
   if(fraction%%1!=0 | fraction<1) {stop("'fraction' must be a positive integer, b=fraction/N.")}
   if(m<1000) {warning("Results with less than 1000 generated datasets per iteration can be unreliable.")}
+  if((method=="bf" | method=="BF") & (length(hypothesis!=1))){stop("Method 'bf' requires exactly two hypotheses.")}
 
   start_time <- Sys.time()
 
@@ -72,10 +73,22 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
                                BFthres=BFthres, PMPthres=PMPthres, hypothesis=hypothesis)
 
     # check if condition is met
-    ifelse(results$power_bf>=eta,
-           Nmax <- unlist(N[j]) - 1,
-           Nmin <- unlist(N[j]) + 1
-    )
+    if(method=="bfc" | method=="BFc" | method=="bf_c" | method=="BF_c"){
+      ifelse(results$power_bfc>=eta,
+             Nmax <- unlist(N[j]) - 1,
+             Nmin <- unlist(N[j]) + 1
+      )
+    } else if(method=="pmp" | method=="PMP"){
+      ifelse(results$power_pmp>=eta,
+             Nmax <- unlist(N[j]) - 1,
+             Nmin <- unlist(N[j]) + 1
+      )
+    } else if(method=="bf" | method=="BF"){
+      ifelse(results$power_bf>=eta,
+             Nmax <- unlist(N[j]) - 1,
+             Nmin <- unlist(N[j]) + 1
+      )
+    }
 
     # Calculate time metrics
     elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))

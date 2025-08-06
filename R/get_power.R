@@ -32,8 +32,8 @@
 getpower_mis_mv <- function(attrition="weibull", params=c(.5,1),
                             m=100, N=100, t.points=c(0,1,2,3,4), var.u0=0.03,
                             var.u1=.1, var.e=.02, cov=0, eff.sizes=c(0, .5, .5),
-                            BFthres=5, fraction=1, log.grow=F, seed=NULL,
-                            hypothesis="a<b<c", PMPthres=.9){
+                            fraction=1, log.grow=F, seed=NULL,
+                            hypothesis="a<b<c", PMPthres=.9, BFthres=5){
 
   if(!is.null(seed)) {set.seed(seed)}  # set user-specified seed for reproducibility
 
@@ -50,14 +50,17 @@ getpower_mis_mv <- function(attrition="weibull", params=c(.5,1),
 
   future::plan(future::sequential)  # Reset plan to avoid unexpected parallel behavior later
 
-  bf <- sapply(bfs, function(x) x[1])
+  bfc <- sapply(bfs, function(x) x[1])
   pmp <- sapply(bfs, function(x) x[2])
+  bf <- sapply(bfs, function(x) x[3])
 
-  power_bf <- mean(bf > BFthres)
+  power_bfc <- mean(bfc > BFthres)
   power_pmp <- mean(pmp > PMPthres)
+  power_bf <- mean(bf > BFthres)
 
-  return(list(power_bf=power_bf,
-              power_pmp=power_pmp))
+  return(list(power_bfc=power_bfc,
+              power_pmp=power_pmp,
+              power_bf=power_bf))
 }
 
 # END OF FUNCTION --------------------------------------------------------------

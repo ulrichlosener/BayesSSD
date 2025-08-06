@@ -17,9 +17,9 @@
 #' @return Returns the Bayes Factor or Posterior Model Probabilities for the hypothesis.
 #' @examples getbf_mis_mv()
 
-getbf_mis_mv <- function(N, attrition="weibull", params=list(.5,1), hypothesis="a<b<c",
+getbf_mis_mv <- function(N, attrition="weibull", params=list(.5,1), hypothesis="a<b<c; a=b=c",
                          t.points, var.u0, var.u1, cov, var.e, eff.sizes=c(0, .5, .8), fraction=1,
-                         log.grow){
+                         log.grow=F){
 
   n <- length(t.points)  # number of measurement occasions
   # create time variable t
@@ -70,27 +70,18 @@ getbf_mis_mv <- function(N, attrition="weibull", params=list(.5,1), hypothesis="
 
   y <- beta1_WL*t + u0 + beta2_TAU*treat_TAU*t + beta3_INT*treat_INT*t + u1*t + e # create outcome variable y
 
-  # if(attrition != F) {
-  #   dat <- data.frame(dat0, y, hazard = unlist(hazard))
-  #   suppressWarnings(dat$mis <- rbinom(n = nrow(dat), size = 1, prob = dat$hazard)) # suppress warning about NAs being produced
-  #   dat$mis <- unsplit(lapply(split(dat$mis, dat$id), function(x) {
-  #     if (any(x == 1, na.rm = TRUE)) {
-  #       first_mis <- which(x == 1)[1]  # Get first occurrence of 1
-  #       x[first_mis:length(x)] <- 1    # Set all subsequent to 1
-  #     }
-  #     x[is.na(x)] <- 0  # Treat NAs as 0 (non-missing)
-  #     x
-  #   }), dat$id)
-  #   dat$y[dat$mis == 1] <- NA
-  # } else {
-  #   dat <- data.frame(dat0, y)
-  # }
-
-  if(attrition != F){
-    dat <- data.frame(dat0, y, hazard=unlist(hazard))
-    suppressWarnings(dat$mis <- rbinom(n=nrow(dat), size=1, prob=dat$hazard)) # suppress warning about NAs being produced
-    dat <- data.frame(dat %>% group_by(id) %>% mutate(mis = ifelse(cumany(mis == 1), 1, mis)))
-    dat$y[which(dat$mis==1)] <- NA
+  if(attrition != F) {
+    dat <- data.frame(dat0, y, hazard = unlist(hazard))
+    suppressWarnings(dat$mis <- rbinom(n = nrow(dat), size = 1, prob = dat$hazard)) # suppress warning about NAs being produced
+    dat$mis <- unsplit(lapply(split(dat$mis, dat$id), function(x) {
+      if (any(x == 1, na.rm = TRUE)) {
+        first_mis <- which(x == 1)[1]  # Get first occurrence of 1
+        x[first_mis:length(x)] <- 1    # Set all subsequent to 1
+      }
+      x[is.na(x)] <- 0  # Treat NAs as 0 (non-missing)
+      x
+    }), dat$id)
+    dat$y[dat$mis == 1] <- NA
   } else {
     dat <- data.frame(dat0, y)
   }
@@ -106,13 +97,19 @@ getbf_mis_mv <- function(N, attrition="weibull", params=list(.5,1), hypothesis="
   # calculate N_eff
   n_eff <- get_neff_mis_mv(model=model, N=N, t.points=t.points, surviv=surviv)
 
+  # evaluate hypotheses
+  hyp <- paste(hypothesis, collapse = ";")
+  n_hyp <- length(hypothesis)
   bf_res <- bain::bain(x=est, Sigma=list(sig_WL, sig_TAU, sig_INT), n=unlist(n_eff),
-                       hypothesis=hypothesis, group_parameters = 1, joint_parameters = 0)
+                       hypothesis=hyp, group_parameters = 1, joint_parameters = 0)
 
   bf_c <- bf_res[["fit"]][["BF.c"]][1]
-  bfs <- bf_res[["BFmatrix"]]
-
   PMPc <- bf_res[["fit"]][["PMPc"]][1]
 
-  return(output = list(bf_c=bf_c, PMPc=PMPc))
+  bf12 <- NULL
+  if(n_hyp==2){
+    bf12 <- bf_res[["BFmatrix"]][1,2]
+  }
+
+  return(output = list(bf_c=bf_c, PMPc=PMPc, bf12=bf12))
 }
