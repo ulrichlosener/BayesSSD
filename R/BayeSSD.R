@@ -48,7 +48,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
   if(BFthres<0) {stop("'BFthres' must be positive.")}
   if(fraction%%1!=0 | fraction<1) {stop("'fraction' must be a positive integer, b=fraction/N.")}
   if(m<1000) {warning("Results with less than 1000 generated datasets per iteration can be unreliable.")}
-  if((method=="bf" | method=="BF") & (length(hypothesis!=2))){stop("Method 'bf' requires exactly two hypotheses.")}
+  if((method=="bf" | method=="BF") & (length(hypothesis)!=2)) {stop("Method 'bf' requires exactly two hypotheses.")}
 
   start_time <- Sys.time()
 
