@@ -2,7 +2,6 @@
 #' Title
 #'
 #' @param eta The desired power level.
-#' #'
 #' @param attrition The attrition pattern (FALSE for no attrition, otherwise "weibull", "modified_weibull", "linear_exponential", "log_logistic", "gompertz" or "non-parametric")
 #' @param params The parameters passed to the survival function specified in "attrition". First parameter is omega, second is gamma.
 #' @param m The number of datasets simulated in each iteration. The higher m, the more accurate the power level but the higher the computation cost
@@ -49,7 +48,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
   if(BFthres<0) {stop("'BFthres' must be positive.")}
   if(fraction%%1!=0 | fraction<1) {stop("'fraction' must be a positive integer, b=fraction/N.")}
   if(m<1000) {warning("Results with less than 1000 generated datasets per iteration can be unreliable.")}
-  if((method=="bf" | method=="BF") & (length(hypothesis!=1))){stop("Method 'bf' requires exactly two hypotheses.")}
+  if((method=="bf" | method=="BF") & (length(hypothesis!=2))){stop("Method 'bf' requires exactly two hypotheses.")}
 
   start_time <- Sys.time()
 
