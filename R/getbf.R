@@ -106,7 +106,7 @@ getbf_mis_mv <- function(N, attrition="weibull", params=list(.5,1), hypothesis="
   bf_c <- bf_res[["fit"]][["BF.c"]][1]
   PMPc <- bf_res[["fit"]][["PMPc"]][1]
 
-  bf12 <- NULL
+  bf12 <- NA
   if(n_hyp==2){
     bf12 <- bf_res[["BFmatrix"]][1,2]
   }
