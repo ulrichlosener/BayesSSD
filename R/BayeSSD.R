@@ -77,16 +77,19 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
              Nmax <- unlist(N[j]) - 1,
              Nmin <- unlist(N[j]) + 1
       )
+      pow <- results$power_bfc
     } else if(method=="pmp" | method=="PMP"){
       ifelse(results$power_pmp>=eta,
              Nmax <- unlist(N[j]) - 1,
              Nmin <- unlist(N[j]) + 1
       )
+      pow <- results$power_pmp
     } else if(method=="bf" | method=="BF"){
       ifelse(results$power_bf>=eta,
              Nmax <- unlist(N[j]) - 1,
              Nmin <- unlist(N[j]) + 1
       )
+      pow <- results$power_bf
     }
 
     # Calculate time metrics
@@ -97,15 +100,15 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
     # Print progress
     cat(
       sprintf("Iter %d: N = %d, Power = %.3f | Elapsed: %.1f minutes | Remaining: ~ %.1f minutes \n",
-              j, unlist(N[[j]]), results$power_bf, elapsed, remaining_time)
+              j, unlist(N[[j]]), pow, elapsed, remaining_time)
     )
 
     # if N increases by only 1 or f power level is very close to desired power level, condition is met and the algorithm stops
-    if ((N[j] == Nmin+1 | Nmax == Nmin) | round(abs(results$power_bf - eta), 8) <= tol) {
+    if ((N[j] == Nmin+1 | Nmax == Nmin) | round(abs(pow - eta), 8) <= tol) {
       condition <- TRUE
       total_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
       cat(sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f)\n",
-                  j, total_time, unlist(N[[j]]), results$power_bf))
+                  j, total_time, unlist(N[[j]]), pow))
     }
 
     # increase iteration by 1
