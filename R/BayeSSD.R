@@ -114,7 +114,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
     # if N increases by only 1 or f power level is very close to desired power level, condition is met and the algorithm stops
     if ((N[j] == Nmin+1 | Nmax == Nmin) | round(abs(pow - eta), 8) <= tol) {
       condition <- TRUE
-      total_time <- as.numeric(difftime(Sys.time(), start_time, units = "secs"))
+      total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
       cat(sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f)\n",
                   j, total_time, unlist(N[[j]]), pow))
     }

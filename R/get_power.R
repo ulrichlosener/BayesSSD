@@ -31,7 +31,7 @@
 
 getpower_mis_mv <- function(attrition="weibull", params=c(.5,1),
                             m=100, N=100, t.points=c(0,1,2,3,4), var.u0=0.03,
-                            var.u1=.1, var.e=.02, cov=0, eff.sizes=c(0, .5, .5),
+                            var.u1=.1, var.e=.02, cov=0, eff.sizes=c(0, .5, .8),
                             fraction=1, log.grow=F, seed=NULL,
                             hypothesis="a<b<c", PMPthres=.9, BFthres=5){
 
