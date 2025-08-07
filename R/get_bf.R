@@ -138,6 +138,5 @@ getbf_mis_mv <- function(N=100, attrition="weibull", params=list(.8,1), hypothes
   return(output = list(bf_c=bf_c,
                        PMPc=PMPc,
                        bf12=bf12,
-                       simplified=simplified,
-                       oversimplified=oversimplified))
+                       simplified=simplified))
 }
