@@ -15,12 +15,12 @@ getpower_mis_mv(
   var.e = 0.02,
   cov = 0,
   eff.sizes = c(0, 0.5, 0.5),
-  BFthres = 5,
   fraction = 1,
   log.grow = F,
   seed = NULL,
   hypothesis = "a<b<c",
-  PMPthres = 0.9
+  PMPthres = 0.9,
+  BFthres = 5
 )
 }
 \arguments{
@@ -44,8 +44,6 @@ getpower_mis_mv(
 
 \item{eff.sizes}{The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.}
 
-\item{BFthres}{The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.}
-
 \item{fraction}{The fraction of information used to construct the prior for the Bayes Factor.}
 
 \item{log.grow}{Use log-linear growth?}
@@ -55,6 +53,8 @@ getpower_mis_mv(
 \item{hypothesis}{The hypothesis to be evaluated. Treatment groups are coded as "a", "b", "c", etc.}
 
 \item{PMPthres}{The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.}
+
+\item{BFthres}{The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.}
 }
 \value{
 Returns the power when using a Bayes Factor and the power when using Posterior Model Probabilities.

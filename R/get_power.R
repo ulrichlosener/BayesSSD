@@ -37,22 +37,36 @@ getpower_mis_mv <- function(attrition="weibull", params=c(.5,1),
 
   if(!is.null(seed)) {set.seed(seed)}  # set user-specified seed for reproducibility
 
+
+  suppressWarnings({ # suppress warning "package 'future' was built under R version 4.4.3"
+
   future::plan(future::multisession, workers = future::availableCores() - 1)  # Use all but one core
 
   Ns <- rep(N, m)  # object to use lapply on with first argument for the function (N)
-  suppressMessages({
-    bfs <- future.apply::future_lapply(Ns, getbf_mis_mv, attrition=attrition,
-                                       params=params, hypothesis=hypothesis, t.points=t.points,
-                                       var.u0=var.u0, var.u1=var.u1, cov=cov, var.e=var.e,
-                                       eff.sizes=eff.sizes, fraction=fraction, log.grow=log.grow,
-                                       future.seed = TRUE)
-  })
+
+  # Run simulation m times
+    bfs <- future.apply::future_lapply(
+      Ns,
+      function(ss){
+        getbf_mis_mv(ss,
+                     attrition=attrition,
+                     params=params, hypothesis=hypothesis, t.points=t.points,
+                     var.u0=var.u0, var.u1=var.u1, cov=cov, var.e=var.e,
+                     eff.sizes=eff.sizes, fraction=fraction, log.grow=log.grow)
+      },
+      future.seed = TRUE
+    )
 
   future::plan(future::sequential)  # Reset plan to avoid unexpected parallel behavior later
+  })
 
-  bfc <- sapply(bfs, function(x) x[1])
-  pmp <- sapply(bfs, function(x) x[2])
-  bf <- sapply(bfs, function(x) x[3])
+  # extract number of simplified models due to identification issues
+  prop_simplified <- mean(unlist(sapply(bfs, function(x) {x[4]})))
+
+  # extract BFs and PMPs
+  bfc <- sapply(bfs, function(x) {x[1]})
+  pmp <- sapply(bfs, function(x) {x[2]})
+  bf <- sapply(bfs, function(x) {x[3]})
 
   power_bfc <- mean(bfc > BFthres)
   power_pmp <- mean(pmp > PMPthres)
@@ -60,7 +74,8 @@ getpower_mis_mv <- function(attrition="weibull", params=c(.5,1),
 
   return(list(power_bfc=power_bfc,
               power_pmp=power_pmp,
-              power_bf=power_bf))
+              power_bf=power_bf,
+              prop_simplified=prop_simplified))
 }
 
 # END OF FUNCTION --------------------------------------------------------------

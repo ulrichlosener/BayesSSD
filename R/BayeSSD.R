@@ -19,7 +19,8 @@
 #' @param PMPthres The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.
 #' @param sensitivity Logical. Conduct a sensitivity analysis for the parameter fraction?
 #' @param tol Tolerance for the deviation of the final result from eta. Higher values may speed up performance.
-#' @param N_max The maximum sample size to be considered. Lower values speed up performance.
+#' @param N_max The maximum sample size to be considered. Lower values may speed up performance.
+#' @param N_min The minimum sample size to be considered. Higher values may speed up performance.
 #'
 #' @return Returns the sample size (number of subjects) necessary to achieve the desired power level (eta).
 #' @export
@@ -36,7 +37,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
                     var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .5, .8),
                     BFthres=5, fraction=1, log.grow=F, seed=NULL,
                     hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.001,
-                    N_max=1000, method="bfc") {
+                    N_max=1000, N_min=30, method="bfc") {
 
   # error and warning messages in case of incorrect input
   if(eta<0 | eta>1) {stop("'eta' (the desired power level) must be between 0 and 1.")}
@@ -56,7 +57,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
 
   N <- list()
 
-  Nmin <- 30            # (initial) minimal sample size
+  Nmin <- N_min            # (initial) minimal sample size
   Nmax <- N_max         # (initial) maximum sample size
   condition <- FALSE    # condition initially FALSE until power criterion is reached
   j <- 1                # iteration counter
@@ -102,6 +103,13 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
       sprintf("Iter %d: N = %d, Power = %.3f | Elapsed: %.1f minutes | Remaining: ~ %.1f minutes \n",
               j, unlist(N[[j]]), pow, elapsed, remaining_time)
     )
+
+    # Warn about simplified models due to too little observations
+    if(results$prop_simplified > 0) {
+      warning(sprintf("%d%% of models required simplification (independent random effects) due to high attrition rate.",
+                      round(prop_simplified * 100)))
+      }
+
 
     # if N increases by only 1 or f power level is very close to desired power level, condition is met and the algorithm stops
     if ((N[j] == Nmin+1 | Nmax == Nmin) | round(abs(pow - eta), 8) <= tol) {

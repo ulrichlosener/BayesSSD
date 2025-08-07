@@ -14,7 +14,7 @@ BayeSSD(
   var.u1 = 0.1,
   var.e = 0.01,
   cov = 0,
-  eff.sizes = c(0, 0.8, 0.8),
+  eff.sizes = c(0, 0.5, 0.8),
   BFthres = 5,
   fraction = 1,
   log.grow = F,
@@ -23,12 +23,13 @@ BayeSSD(
   PMPthres = 0.9,
   sensitivity = F,
   tol = 0.001,
-  N_max = 1000
+  N_max = 1000,
+  N_min = 30,
+  method = "bfc"
 )
 }
 \arguments{
-\item{eta}{The desired power level.
-#'}
+\item{eta}{The desired power level.}
 
 \item{attrition}{The attrition pattern (FALSE for no attrition, otherwise "weibull", "modified_weibull", "linear_exponential", "log_logistic", "gompertz" or "non-parametric")}
 
@@ -64,7 +65,9 @@ BayeSSD(
 
 \item{tol}{Tolerance for the deviation of the final result from eta. Higher values may speed up performance.}
 
-\item{N_max}{The maximum sample size to be considered. Lower values speed up performance.}
+\item{N_max}{The maximum sample size to be considered. Lower values may speed up performance.}
+
+\item{N_min}{The minimum sample size to be considered. Higher values may speed up performance.}
 }
 \value{
 Returns the sample size (number of subjects) necessary to achieve the desired power level (eta).

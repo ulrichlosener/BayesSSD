@@ -86,41 +86,32 @@ getbf_mis_mv <- function(N=100, attrition="weibull", params=list(.8,1), hypothes
     dat <- data.frame(dat0, y)
   }
 
-  simplified <- oversimplified <- F
+  simplified <- F
 
   model <- tryCatch({
     # First try to fit full model
     lme4::lmer(formula = y ~ t + treat + t:treat + (1 + t | id),
-               data = dat, REML = F,
+               data = dat,
+               REML = F,
                control = lme4::lmerControl(calc.derivs = F))
+
   }, error = function(e) {
     if (grepl("number of observations.*number of random effects", e$message)) {
       simplified <<- TRUE
       # If too little observations, try uncorrelated random effects
       tryCatch({
         lme4::lmer(formula = y ~ t + treat + t:treat + (1 | id) + (0 + t | id),
-                   data = dat, REML = F,
-                   control = lme4::lmerControl(calc.derivs = F))
-      }, error = function(e) {
-        oversimplified <<- TRUE
-        # Final fallback: random intercept only
-        lme4::lmer(formula = y ~ t + treat + t:treat + (1 | id),
-                   data = dat, REML = F,
+                   data = dat,
+                   REML = F,
                    control = lme4::lmerControl(calc.derivs = F))
       })
-    } else {
-      return(NULL)  # Return NULL for other errors
     }
   })
 
-  # Stop if model fitting failed entirely
-  if (is.null(model)) {
-    return(list(bf_c = NA, PMPc = NA, bf12 = NA))
-  }
+  # In case of rank deficiency due to too little observations, throw error
+  if(length(model@beta) < 6) {stop("It seems that due to the high attrition rate, the fixed-effects model matrix of the multilevel model has become rank deficient. Consider lowering the attrition rate.")}
 
-
-  # fit MLM to dataset
-  # model <- lme4::lmer(formula = y ~ t + treat + t:treat + (1 + t | id), data = dat, REML=F, control = lme4::lmerControl(calc.derivs = F))  # fit MLM model under H1
+  # extract estimates from MLM
   est <- model@beta[c(2,5,6)] # extract estimates of beta2 and beta3 under H0
   names(est) <- c("a", "b", "c")
   sig_WL <- as.matrix(vcov(model)[2,2])  # extract variance of estimates under H0
