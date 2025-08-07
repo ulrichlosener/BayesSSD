@@ -12,7 +12,7 @@
 #' @param var.e The residual variance.
 #' @param eff.sizes The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.
 #' @param fraction The fraction of information used to construct the prior for the Bayes Factor.
-#' @param log.grow Use log-linear growth?#' @param var.u0
+#' @param log.grow Use log-linear growth?
 #' @param BFthres The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.
 #' @param seed Set a seed for reproducibility
 #' @param hypothesis The hypothesis to be evaluated. Treatment groups are coded as "a", "b", "c", etc.
@@ -107,7 +107,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
     # Warn about simplified models due to too little observations
     if(results$prop_simplified > 0) {
       warning(sprintf("%d%% of models required simplification (independent random effects) due to high attrition rate.",
-                      round(prop_simplified * 100)))
+                      round(results$prop_simplified * 100)))
       }
 
 
