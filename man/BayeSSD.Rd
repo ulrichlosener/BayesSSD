@@ -53,7 +53,7 @@ BayeSSD(
 
 \item{fraction}{The fraction of information used to construct the prior for the Bayes Factor.}
 
-\item{log.grow}{Use log-linear growth?#' @param var.u0}
+\item{log.grow}{Use log-linear growth?}
 
 \item{seed}{Set a seed for reproducibility}
 
@@ -68,6 +68,8 @@ BayeSSD(
 \item{N_max}{The maximum sample size to be considered. Lower values may speed up performance.}
 
 \item{N_min}{The minimum sample size to be considered. Higher values may speed up performance.}
+
+\item{method}{The method used 3for hypothesis evaluation. If "bfc"/"BFc", then the hypothesis is compared against its complement via the Bayes Factor. If "bf"/"BF", then the first hypothesis is compared to the second one via the Bayes Factor. If "pmp"/"PMP", then the first hypothesis is compared to the whole set of hypotheses including the complement via posterior model probabilities.}
 }
 \value{
 Returns the sample size (number of subjects) necessary to achieve the desired power level (eta).

@@ -21,6 +21,7 @@
 #' @param tol Tolerance for the deviation of the final result from eta. Higher values may speed up performance.
 #' @param N_max The maximum sample size to be considered. Lower values may speed up performance.
 #' @param N_min The minimum sample size to be considered. Higher values may speed up performance.
+#' @param method The method used for hypothesis evaluation. If "bfc"/"BFc", then the hypothesis is compared against its complement via the Bayes Factor. If "bf"/"BF", then the first hypothesis is compared to the second one via the Bayes Factor. If "pmp"/"PMP", then the first hypothesis is compared to the whole set of hypotheses including the complement via posterior model probabilities.
 #'
 #' @return Returns the sample size (number of subjects) necessary to achieve the desired power level (eta).
 #' @export

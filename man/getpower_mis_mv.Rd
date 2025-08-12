@@ -14,7 +14,7 @@ getpower_mis_mv(
   var.u1 = 0.1,
   var.e = 0.02,
   cov = 0,
-  eff.sizes = c(0, 0.5, 0.5),
+  eff.sizes = c(0, 0.5, 0.8),
   fraction = 1,
   log.grow = F,
   seed = NULL,

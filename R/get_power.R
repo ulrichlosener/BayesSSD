@@ -39,6 +39,7 @@ getpower_mis_mv <- function(attrition="weibull", params=c(.5,1),
 
 
   suppressWarnings({ # suppress warning "package 'future' was built under R version 4.4.3"
+  suppressMessages({ # supress messages about singular fit in MLMs
 
   future::plan(future::multisession, workers = future::availableCores() - 1)  # Use all but one core
 
@@ -59,7 +60,7 @@ getpower_mis_mv <- function(attrition="weibull", params=c(.5,1),
 
   future::plan(future::sequential)  # Reset plan to avoid unexpected parallel behavior later
   })
-
+  })
   # extract number of simplified models due to identification issues
   prop_simplified <- mean(unlist(sapply(bfs, function(x) {x[4]})))
 
