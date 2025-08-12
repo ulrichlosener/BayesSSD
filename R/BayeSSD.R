@@ -101,14 +101,14 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
 
     # Print progress
     cat(
-      sprintf("Iter %d: N = %d, Power = %.3f | Elapsed: %.1f minutes | Remaining: ~ %.1f minutes \n",
+      sprintf("Iteration %d: N = %d, Power = %.3f | Elapsed: %.1f minutes | Remaining: ~ %.1f minutes \n",
               j, unlist(N[[j]]), pow, elapsed, remaining_time)
     )
 
     # Warn about simplified models due to too little observations
     if(results$prop_simplified > 0) {
-      warning(sprintf("%.0f%% of models required simplification (independent random effects) due to high attrition/too few observations",
-                      results$prop_simplified * 100))
+      sprintf("%.1f%% of models required simplification (independent random effects) due to high attrition/too few observations",
+                      results$prop_simplified * 100)
       }
 
     # if N increases by only 1 or f power level is very close to desired power level, condition is met and the algorithm stops
