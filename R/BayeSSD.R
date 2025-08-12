@@ -107,10 +107,9 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
 
     # Warn about simplified models due to too little observations
     if(results$prop_simplified > 0) {
-      warning(sprintf("%d%% of models required simplification (independent random effects) due to high attrition rate.",
-                      round(results$prop_simplified * 100)))
+      warning(sprintf("%d%% of models required simplification (independent random effects) due to high attrition/too few observations",
+                      results$prop_simplified * 100))
       }
-
 
     # if N increases by only 1 or f power level is very close to desired power level, condition is met and the algorithm stops
     if ((N[j] == Nmin+1 | Nmax == Nmin) | round(abs(pow - eta), 8) <= tol) {
