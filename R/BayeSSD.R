@@ -108,7 +108,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
     # Warn about simplified models due to too little observations
     if(results$prop_simplified > 0) {
       cat(
-        sprintf("%.1f%% of models required simplification (independent random effects) due to high attrition/too few observations",
+        sprintf("%.1f%% of models required simplification (independent random effects) due to high attrition/too few observations \n",
                 results$prop_simplified * 100)
       )
       }
@@ -117,7 +117,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
     if ((N[j] == Nmin+1 | Nmax == Nmin) | round(abs(pow - eta), 8) <= tol) {
       condition <- TRUE
       total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
-      cat(sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f)\n",
+      cat(sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f) \n",
                   j, total_time, unlist(N[[j]]), pow))
     }
 
