@@ -19,8 +19,8 @@
 #' @param PMPthres The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.
 #' @param sensitivity Logical. Conduct a sensitivity analysis for the parameter fraction?
 #' @param tol Tolerance for the deviation of the final result from eta. Higher values may speed up performance.
-#' @param N_max The maximum sample size to be considered. Lower values may speed up performance.
-#' @param N_min The minimum sample size to be considered. Higher values may speed up performance.
+#' @param N.max The maximum sample size to be considered. Lower values may speed up performance.
+#' @param N.min The minimum sample size to be considered. Higher values may speed up performance.
 #' @param method The method used for hypothesis evaluation. If "bfc"/"BFc", then the hypothesis is compared against its complement via the Bayes Factor. If "bf"/"BF", then the first hypothesis is compared to the second one via the Bayes Factor. If "pmp"/"PMP", then the first hypothesis is compared to the whole set of hypotheses including the complement via posterior model probabilities.
 #'
 #' @return Returns the sample size (number of subjects) necessary to achieve the desired power level (eta).
@@ -38,7 +38,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
                     var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .5, .8),
                     BFthres=5, fraction=1, log.grow=F, seed=NULL,
                     hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.001,
-                    N_max=1000, N_min=30, method="bfc") {
+                    N.max=1000, N.min=30, method="bfc") {
 
   # error and warning messages in case of incorrect input
   if(eta<0 | eta>1) {stop("'eta' (the desired power level) must be between 0 and 1.")}

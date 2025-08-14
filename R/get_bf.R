@@ -1,4 +1,4 @@
-#' Calculate the BF for a hypothesis with attrition
+#' Calculate the Bayes Factor and posterior model probabilities
 #'
 #' @param N The number of subjects
 #' @param attrition The attrition pattern (FALSE for no attrition, otherwise "weibull", "modified_weibull", "linear_exponential", "log_logistic", "gompertz" or "non-parametric")
@@ -15,22 +15,47 @@
 #' @importFrom bain bain
 #' @export
 #' @return Returns the Bayes Factor or Posterior Model Probabilities for the hypothesis.
-#' @examples getbf_mis_mv()
+#' @examples getbf_mis_mv(N=100, attrition="weibull", params=list(.8,1), hypothesis=list("a<b<c","a=b=c"), t.points=c(0,1,2), var.u0=.01, var.u1=.01, cov=0, var.e=.01, eff.sizes=c(0, .5, .8), fraction=1, log.grow=F)
 
-getbf_mis_mv <- function(N=100, attrition="weibull", params=list(.8,1), hypothesis=list("a<b<c","a=b=c"),
-                         t.points=c(0,1,2), var.u0=.01, var.u1=.01, cov=0, var.e=.01, eff.sizes=c(0, .5, .8),
-                         fraction=1, log.grow=F){
+getbf <- function(N=100, attrition="weibull", params=list(.8,1), hypothesis=list("a<b<c","a=b=c"),
+                                 t.points=c(0,1,2), var.u0=.01, var.u1=.01, cov=0, var.e=.01, eff.sizes=c(0, .5, .8),
+                                 fraction=1, log.grow=F){
+
+  # determine number of conditions from hypotheses
+  cond_letters <- unique(unlist(lapply(hypothesis, function(h) {
+    unique(unlist(strsplit(gsub("[^a-z]", "", tolower(h)), "")))
+  })))
+  n_cond <- length(cond_letters)      # extract the number of conditions
+  cond_letters <- sort(cond_letters)  # ensure consistent ordering
+
+  # check consistency of number of conditions in arguments
+  if(length(eff.sizes) != n_cond) {
+    stop("Number of effect sizes must match number of conditions")
+  }
+
+  # check maximum number of conditions
+  if(length(n_cond) > 10) {
+    stop("The maximum number of treatment conditions is 10")
+  }
 
   n <- length(t.points)  # number of measurement occasions
+
   # create time variable t
-  if(log.grow==F) {t <- rep(t.points, N) # if logarithmic growth is used, take log of t.points
-  } else {if(min(t.points)==0) {t <- rep(log(t.points+1), N)} else {t <- rep(log(t.points), N)} # if the first timepoint is zero, we add 1 to all timepoints because log(0) is undefined
+  if(log.grow==F) {
+    t <- rep(t.points, N)
+  } else {
+    if(min(t.points)==0) {
+      t <- rep(log(t.points+1), N)
+    } else {
+      t <- rep(log(t.points), N)
+    }
   }
-  t.prop <- t.points/max(t.points) # create rescaled time variable (from 0 to 1)
+
+  t.prop <- t.points/max(t.points) # create rescaled time variable
   id <- rep(seq_len(N), each=n)  # create ID variable
-  treat <- as.character(gl(n=3, k=n, length=N*n, labels=c("a","b","c"))) # create treatment variable
-  dat0 <- data.frame(id, treat, t) # combine into data frame
-  dat0$treat <- factor(dat0$treat, levels = c("a", "b", "c")) # Forces "a" as reference
+  treat <- as.character(gl(n=n_cond, k=n, length=N*n, labels=cond_letters))
+  dat0 <- data.frame(id, treat, t) # template data frame
+  dat0$treat <- factor(dat0$treat, levels = cond_letters) # first letter as reference
 
   # make params into list of one vector
   if (is.list(params)) {
@@ -39,68 +64,66 @@ getbf_mis_mv <- function(N=100, attrition="weibull", params=list(.8,1), hypothes
     params <- list(params)
   }
 
-  # Compute survival curves
+  # compute survival curves
   if(any(attrition != F)){
     surviv <- survival(attrition, params, t.points)
-    shifted_surviv <- lapply(surviv, function(x) {c(x[-1], NA)}) # drop first element and append NA to compute hazard
+    shifted_surviv <- lapply(surviv, function(x) {c(x[-1], NA)})
   } else if(attrition==F){
     surviv <- list(rep(1, n))
     shifted_surviv <- c(surviv[-1], NA)
   }
 
-  # compute hazard: (S_t - S_{t+1}) / S_t
+  # compute hazard
   hazard <- mapply(function(a, b) {(a - b) / a},
                    surviv,
                    shifted_surviv,
                    SIMPLIFY = FALSE)
 
-  # generate data under the research hypothesis
+  # generate data
   multinorm <- MASS::mvrnorm(n=N, mu=c(0,0), Sigma=matrix(c(var.u0, cov, cov, var.u1), 2, 2)) # draw random effects
-  u0 <- rep(multinorm[, 1], each=n)  # random intercepts
-  u1 <- rep(multinorm[, 2], each=n)  # random slopes
-  e <- rnorm(N*n, 0, sqrt(var.e)) # error variance for H1
+  treat_coefs <- eff.sizes[-1] * sqrt(var.u1) + eff.sizes[1] * sqrt(var.u1) # cumulative effect sizes
+  treat_dummies <- model.matrix(~ treat - 1, data = dat0)[, -1, drop = FALSE] # create dummies
 
-  # Create treatment dummy variables
-  treat_TAU <- as.numeric(treat == "b")
-  treat_INT <- as.numeric(treat == "c")
+  components <- list(
+    base = eff.sizes[1] * sqrt(var.u1) * t, # baseline effect for condition "a"
+    u0 = rep(multinorm[, 1], each=n),       # random intercepts
+    u1 = rep(multinorm[, 2], each=n) * t,   # random slopes
+    treatments = rowSums(treat_dummies * t %*% t(treat_coefs)), # betas for each condition
+    error = rnorm(N * n, 0, sqrt(var.e))    # residual
+    )
 
-  beta1_WL <- unlist(eff.sizes[1]) * sqrt(var.u1)
-  beta2_TAU <- unlist(eff.sizes[2]) * sqrt(var.u1) + beta1_WL # create coefficient of interaction for b from effect size
-  beta3_INT <- unlist(eff.sizes[3]) * sqrt(var.u1) + beta1_WL # create coefficient of interaction for c from effect size
+    y <- Reduce(`+`, components) # add everything together
 
-  y <- beta1_WL*t + u0 + beta2_TAU*treat_TAU*t + beta3_INT*treat_INT*t + u1*t + e # create outcome variable y
-
+  # introduce attrition to the simulated data
   if(attrition != F) {
     dat <- data.frame(dat0, y, hazard = unlist(hazard))
-    suppressWarnings(dat$mis <- rbinom(n = nrow(dat), size = 1, prob = dat$hazard)) # suppress warning about NAs being produced
-    dat$mis <- unsplit(lapply(split(dat$mis, dat$id), function(x) {
-      if (any(x == 1, na.rm = TRUE)) {
-        first_mis <- which(x == 1)[1]  # Get first occurrence of 1
-        x[first_mis:length(x)] <- 1    # Set all subsequent to 1
+    suppressWarnings(dat$mis <- rbinom(n = nrow(dat), size = 1, prob = dat$hazard)) # suppress warnings about NAs being created
+    dat$mis <- unsplit(lapply(split(dat$mis, dat$id), function(x) { # create an indicator variable of missing
+      if (any(x == 1, na.rm = TRUE)) { # make all data missing from the first missing value onwards for each person
+        first_mis <- which(x == 1)[1]
+        x[first_mis:length(x)] <- 1
       }
-      x[is.na(x)] <- 0  # Treat NAs as 0 (non-missing)
+      x[is.na(x)] <- 0
       x
     }), dat$id)
     dat$y[dat$mis == 1] <- NA
-  } else {
+  } else { # if no attrition, just return the original data
     dat <- data.frame(dat0, y)
   }
 
-  simplified <- F
+  simplified <- FALSE # initialize indicator variable for simplified models
 
+  # in case of identifiability issues due to high attrition, simplify the model (constrain random effects to be independent)
   model <- tryCatch({
-    # First try to fit full model
     lme4::lmer(formula = y ~ t + treat + t:treat + (1 + t | id),
                data = dat,
                REML = F,
                control = lme4::lmerControl(calc.derivs = F))
-
   }, error = function(e) {
     if (grepl("number of observations.*number of random effects", e$message)) {
-      simplified <<- TRUE
-      # If too little observations, try uncorrelated random effects
+      simplified <<- TRUE # indicate when simplidication happens
       tryCatch({
-        lme4::lmer(formula = y ~ t + treat + t:treat + (1 | id) + (0 + t | id),
+        lme4::lmer(formula = y ~ t + treat + t:treat + (1 | id) + (0 + t | id), # independent random effects
                    data = dat,
                    REML = F,
                    control = lme4::lmerControl(calc.derivs = F))
@@ -108,35 +131,44 @@ getbf_mis_mv <- function(N=100, attrition="weibull", params=list(.8,1), hypothes
     }
   })
 
-  # In case of rank deficiency due to too little observations, throw error
-  if(length(model@beta) < 6) {stop("It seems that due to the high attrition rate, the fixed-effects model matrix of the multilevel model has become rank deficient. Consider lowering the attrition rate.")}
+  # check for rank deficiency
+  expected_params <- 2 + (n_cond-1) * 2  # Intercept + t + (k-1) treat + (k-1) t:treat
+  if(length(model@beta) < expected_params) { # in case the model is still not identifiable, throw error
+    stop("Rank deficiency due to high attrition rate. Consider lowering attrition rate.")
+  }
 
-  # extract estimates from MLM
-  est <- model@beta[c(2,5,6)] # extract estimates of beta2 and beta3 under H0
-  names(est) <- c("a", "b", "c")
-  sig_WL <- as.matrix(vcov(model)[2,2])  # extract variance of estimates under H0
-  sig_TAU <- as.matrix(vcov(model)[5,5])  # extract variance of estimates under H0
-  sig_INT <- as.matrix(vcov(model)[6,6])  # extract variance of estimates under H0
+  # Extract estimates from the model
+  est_indices <- c(2, seq(2 + n_cond, length.out = n_cond-1)) # positions of relevant estimates
+  est <- model@beta[est_indices] # extract estimates
+  names(est) <- cond_letters # name them for bain
+
+  # Extract variances using the same indices as for the estimates
+  Sigma <- lapply(est_indices, function(i) as.matrix(vcov(model)[i,i]))
 
   # calculate N_eff
   n_eff <- get_neff_mis_mv(model=model, N=N, t.points=t.points, surviv=surviv)
 
   # evaluate hypotheses
-  hyp <- paste(hypothesis, collapse = ";")
-  n_hyp <- length(hypothesis)
-  bf_res <- bain::bain(x=est, Sigma=list(sig_WL, sig_TAU, sig_INT), n=unlist(n_eff),
+  hyp <- paste(hypothesis, collapse = ";") # put hypotheses in one single string for bain
+  n_hyp <- length(hypothesis) # extract the number of hypotheses
+
+  # perform Bayesian hypothesis evaluation using bain package
+  bf_res <- bain::bain(x=est, Sigma=Sigma, n=unlist(rep(N, n_cond)),
                        hypothesis=hyp, group_parameters = 1, joint_parameters = 0)
 
-  bf_c <- bf_res[["fit"]][["BF.c"]][1]
-  PMPc <- bf_res[["fit"]][["PMPc"]][1]
+  bf_c <- bf_res[["fit"]][["BF.c"]][1] # extract the BF versus the complement hypothesis
+  PMPc <- bf_res[["fit"]][["PMPc"]][1] # extract the posterior model probabilities including all hypotheses plus the complement of the union
 
   bf12 <- NA
-  if(n_hyp==2){
+  if(n_hyp==2){ # if there are two hypotheses, extract the BF of H1 versus H2
     bf12 <- bf_res[["BFmatrix"]][1,2]
   }
 
-  return(output = list(bf_c=bf_c,
-                       PMPc=PMPc,
-                       bf12=bf12,
-                       simplified=simplified))
+  # return results
+  return(list(bf_c=bf_c,
+              PMPc=PMPc,
+              bf12=bf12,
+              simplified=simplified,
+              n_cond=n_cond,
+              conditions=cond_letters))
 }
