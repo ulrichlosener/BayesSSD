@@ -31,7 +31,6 @@ getbf_mis_mv <- function(N=100, attrition="weibull", params=list(.8,1), hypothes
   treat <- as.character(gl(n=3, k=n, length=N*n, labels=c("a","b","c"))) # create treatment variable
   dat0 <- data.frame(id, treat, t) # combine into data frame
   dat0$treat <- factor(dat0$treat, levels = c("a", "b", "c")) # Forces "a" as reference
-  multinorm <- MASS::mvrnorm(n=2*N, mu=c(0,0), matrix(c(var.u0, cov, cov, var.u1), nrow=2, ncol=2)) # draw random effects
 
   # make params into list of one vector
   if (is.list(params)) {
@@ -56,8 +55,9 @@ getbf_mis_mv <- function(N=100, attrition="weibull", params=list(.8,1), hypothes
                    SIMPLIFY = FALSE)
 
   # generate data under the research hypothesis
-  u0 <- rep(multinorm[(nrow(multinorm)/2+1):(nrow(multinorm)),1], each=n) # random intercepts
-  u1 <- rep(multinorm[(nrow(multinorm)/2+1):(nrow(multinorm)),2], each=n) # random slopes
+  multinorm <- MASS::mvrnorm(n=N, mu=c(0,0), Sigma=matrix(c(var.u0, cov, cov, var.u1), 2, 2)) # draw random effects
+  u0 <- rep(multinorm[, 1], each=n)  # random intercepts
+  u1 <- rep(multinorm[, 2], each=n)  # random slopes
   e <- rnorm(N*n, 0, sqrt(var.e)) # error variance for H1
 
   # Create treatment dummy variables
