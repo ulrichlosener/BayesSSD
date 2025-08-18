@@ -21,140 +21,128 @@
 
 get_neff <- function(model, N, t.points, surviv) {
 
+  n <- length(t.points) # number of observations per person
+
   # Check number of treatment conditions
-  treat_levels <- unique(model@frame[["treat"[1]]])
+  treat_levels <- unique(model@frame[["treat"]])
   num_conditions <- length(treat_levels)
 
-  n <- length(t.points)
-  ones <- rep(1, n)
-  zeros <- rep(0, n)
-
-  # Extract model components
+  # Extract model components - optimized extraction
   reVar <- lme4::VarCorr(model)
   sigma2 <- sigma(model)^2
-  Zt <- as.matrix(lme4::getME(model, "Zt")[1:2, 1:n, drop = FALSE])
+  Zt <- as.matrix(lme4::getME(model, "Zt")[1:2, 1:n, drop = FALSE])  # Correct matrix extraction
   Z <- t(Zt)
 
-  # Create design matrices for each condition
-  design_matrices <- lapply(1:num_conditions, function(i) {
-    treat_cols <- matrix(0, nrow = n, ncol = num_conditions - 1)
-      if(i > 1) treat_cols[, i-1] <- 1
-      colnames(treat_cols) <- paste0("treat", 1:(num_conditions-1))
+  # Create design matrices - optimized using matrix templates
+  design_matrices <- vector("list", num_conditions)
+  base_design <- cbind(intercept = rep(1, n), t = t.points)
 
-    time_treat_cols <- matrix(0, nrow = n, ncol = num_conditions - 1)
-      if(i > 1) time_treat_cols[, i-1] <- t.points
-      colnames(time_treat_cols) <- paste0("t:treat", 1:(num_conditions-1))
+  # Create treatment indicator templates
+  treat_template <- matrix(0, n, num_conditions - 1)
+  colnames(treat_template) <- paste0("treat", 1:(num_conditions - 1))
+  time_treat_template <- treat_template * t.points
+  colnames(time_treat_template) <- paste0("t:treat", 1:(num_conditions - 1))
 
-    cbind(intercept = ones,
-          t = t.points,
-          treat_cols,
-          time_treat_cols)
-  })
-
-  # Construct D matrix
-  D <- Matrix::bdiag(lapply(reVar, function(x) as(Matrix::bdiag(x), "generalMatrix")))
-
-  # Precompute all possible subsets under attrition
-  row_indices <- lapply(n:1, function(k) if(k == n) 1:n else 1:k)
-
-  # Compute V and W matrices for all subsets
-  compute_matrices <- function(rows) {
-    Z_sub <- Z[rows, , drop = FALSE]
-    V <- as(Z_sub %*% D %*% t(Z_sub) + sigma2 * Matrix::Diagonal(length(rows)), "CsparseMatrix")
-    W <- Matrix::Diagonal(x = diag(as.matrix(V)))
-    list(V = V, W = W)
+  for(i in 1:num_conditions) {
+    if(i == 1) {
+      # Control condition
+      design_matrices[[i]] <- cbind(base_design, treat_template, time_treat_template)
+    } else {
+      # Treatment conditions
+      treat_cols <- treat_template
+      treat_cols[, i-1] <- 1
+      time_treat_cols <- time_treat_template
+      time_treat_cols[, i-1] <- t.points
+      design_matrices[[i]] <- cbind(base_design, treat_cols, time_treat_cols)
+    }
   }
 
-  matrices <- lapply(row_indices, compute_matrices)
+  # Construct D matrix - optimized using direct extraction
+  D <- as.matrix(Matrix::bdiag(reVar))
 
-  # Compute inverses for all subsets
-  inverses <- lapply(matrices, function(m) {
-    list(V_inv = solve(m$V),
-         W_inv = solve(m$W))
-  })
+  # Precompute all possible subsets under attrition
+  row_indices <- lapply(1:n, function(k) 1:k)
 
-  # Initialize sum matrices
+  # Pre-allocate and compute all inverses upfront
+  V_inverses <- vector("list", n)
+  W_inverses <- vector("list", n)
+
+  for(k in 1:n) {
+    rows <- row_indices[[k]]
+    Z_sub <- Z[rows, , drop = FALSE]
+    V <- Z_sub %*% D %*% t(Z_sub) + sigma2 * diag(k)
+
+    # Handle diagonal matrix creation safely for large matrices
+    W <- diag(x = diag(V), nrow = k, ncol = k)  # Safer diagonal matrix creation
+
+    V_inverses[[k]] <- chol2inv(chol(V))  # Fast and  stable inverse
+    W_inverses[[k]] <- diag(1/diag(V), nrow = k)  # Direct computation for diagonal
+  }
+
+  # Initialize result storage
   p <- ncol(design_matrices[[1]])
-  sum_mat <- sum_mat_indep <- matrix(0, p, p)
+  indices <- c(2, seq(2 + num_conditions, length.out = num_conditions-1)) # positions of relevant estimates
 
   if(is.list(surviv) && length(surviv) > 1) {
-    # Different survival patterns for each condition
-    process_condition <- function(cond) {
-      cond_sums <- Reduce(
-        function(acc, k) {
-          idx <- n - k + 1
-          rows <- row_indices[[idx]]
-          inv <- inverses[[idx]]
-          X_sub <- design_matrices[[cond]][rows, , drop = FALSE]
-          surv_weight <- surviv[[cond]][k]
 
-          list(
-            V_sum = acc$V_sum + surv_weight * (t(X_sub) %*% inv$V_inv %*% X_sub),
-            W_sum = acc$W_sum + surv_weight * (t(X_sub) %*% inv$W_inv %*% X_sub)
-          )
-        },
-        n:1,
-        init = list(V_sum = matrix(0, p, p), W_sum = matrix(0, p, p))
-      )
+    # Different survival patterns
+    res <- vector("list", num_conditions)
 
-      var_beta_hat <- tryCatch(solve(cond_sums$V_sum), error = function(e) MASS::ginv(cond_sums$V_sum))
-      var_betahat_indep <- tryCatch(solve(cond_sums$W_sum), error = function(e) MASS::ginv(cond_sums$W_sum))
+    for(cond in 1:num_conditions) {
+      V_sum <- matrix(0, p, p)
+      W_sum <- matrix(0, p, p)
 
-      w <- var_betahat_indep / var_beta_hat
-      N_eff <- w * (N/num_conditions) * n
+      for(k in 1:n) {
+        surv_weight <- surviv[[cond]][k]
 
-      # Extract relevant effects
-      effects <- c(
-        Time = N_eff[2,2],
-          c(
-            sapply(1:(num_conditions-1), function(i) c(
-              Main = N_eff[2+i,2+i],
-              Interaction = N_eff[2+num_conditions-1+i, 2+num_conditions-1+i]
-            ))
-          )
-      )
-      effects
+        X_sub <- design_matrices[[cond]][row_indices[[k]], , drop = FALSE]
+        Vinv <- V_inverses[[k]]
+        Winv <- W_inverses[[k]]
+
+        V_sum <- V_sum + surv_weight * crossprod(X_sub, Vinv %*% X_sub)
+        W_sum <- W_sum + surv_weight * crossprod(X_sub, Winv %*% X_sub)
+      }
+
+      var_beta_hat <- tryCatch(solve(V_sum), error = function(e) MASS::ginv(V_sum))
+      var_betahat_indep <- tryCatch(solve(W_sum), error = function(e) MASS::ginv(W_sum))
+
+      w <- var_betahat_indep / var_beta_hat # apply formula by Faes et al. to calculate weight w
+
+      # Extract number of non-missing observations for the current condition
+      n_obs <- nrow(model@frame[model@frame$treat == treat_levels[cond],])
+
+      N_eff <- w * n_obs
+
+      res[[cond]] <- N_eff[indices[cond], indices[cond]] # return only N_eff for one condition
     }
 
-    res <- lapply(1:num_conditions, process_condition)
-    names(res) <- paste0("Condition_", treat_levels)
     return(res)
 
   } else {
-    # Same survival pattern for all conditions
-    sums <- Reduce(
-      function(acc, k) {
-        idx <- n - k + 1
-        rows <- row_indices[[idx]]
-        inv <- inverses[[idx]]
-        surv_weight <- surviv[[1]][k]
+    # Same survival pattern - optimized processing
+    V_sum <- matrix(0, p, p)
+    W_sum <- matrix(0, p, p)
 
-        cond_sums <- lapply(design_matrices, function(X) {
-          X_sub <- X[rows, , drop = FALSE]
-          list(
-            V = surv_weight * (t(X_sub) %*% inv$V_inv %*% X_sub),
-            W = surv_weight * (t(X_sub) %*% inv$W_inv %*% X_sub)
-          )
-        })
+    # total number of observations
+    for(k in 1:n) {
+      surv_weight <- surviv[[1]][k]
 
-        list(
-          V_sum = acc$V_sum + Reduce(`+`, lapply(cond_sums, `[[`, "V")),
-          W_sum = acc$W_sum + Reduce(`+`, lapply(cond_sums, `[[`, "W"))
-        )
-      },
-      n:1,
-      init = list(V_sum = matrix(0, p, p), W_sum = matrix(0, p, p))
-    )
+      for(cond in 1:num_conditions) {
+        X_sub <- design_matrices[[cond]][row_indices[[k]], , drop = FALSE]
+        V_sum <- V_sum + surv_weight * crossprod(X_sub, V_inverses[[k]] %*% X_sub)
+        W_sum <- W_sum + surv_weight * crossprod(X_sub, W_inverses[[k]] %*% X_sub)
+      }
+    }
 
-    var_beta_hat <- tryCatch(solve(sums$V_sum), error = function(e) MASS::ginv(sums$V_sum))
-    var_betahat_indep <- tryCatch(solve(sums$W_sum), error = function(e) MASS::ginv(sums$W_sum))
+    var_beta_hat <- tryCatch(solve(V_sum), error = function(e) MASS::ginv(V_sum))
+    var_betahat_indep <- tryCatch(solve(W_sum), error = function(e) MASS::ginv(W_sum))
 
     w <- var_betahat_indep / var_beta_hat
-    N_eff <- w * N * n
 
-    # Format results
-    indices <- c(2, seq(2 + num_conditions, length.out = num_conditions-1)) # positions of relevant estimates
+    n_obs <- nrow(model@frame)
 
-    return(N_eff[indices, indices]/num_conditions)
+    N_eff <- w * n_obs
+
+    return(as.list(diag(N_eff)[indices]))
   }
 }
