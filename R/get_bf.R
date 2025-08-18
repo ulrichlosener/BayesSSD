@@ -57,28 +57,6 @@ get_bf <- function(N=100, attrition="weibull", params=list(.8,1), hypothesis=lis
   dat0 <- data.frame(id, treat, t) # template data frame
   dat0$treat <- factor(dat0$treat, levels = cond_letters) # first letter as reference
 
-  # make params into list of one vector
-  if (is.list(params)) {
-    params <- list(unlist(params, use.names = FALSE))
-  } else {
-    params <- list(params)
-  }
-
-  # compute survival curves
-  if(any(attrition != F)){
-    surviv <- survival(attrition, params, t.points)
-    shifted_surviv <- lapply(surviv, function(x) {c(x[-1], NA)})
-  } else if(attrition==F){
-    surviv <- list(rep(1, n))
-    shifted_surviv <- c(surviv[-1], NA)
-  }
-
-  # compute hazard
-  hazard <- mapply(function(a, b) {(a - b) / a},
-                   surviv,
-                   shifted_surviv,
-                   SIMPLIFY = FALSE)
-
   # generate data
   multinorm <- MASS::mvrnorm(n=N, mu=c(0,0), Sigma=matrix(c(var.u0, cov, cov, var.u1), 2, 2)) # draw random effects
   treat_coefs <- eff.sizes[-1] * sqrt(var.u1) + eff.sizes[1] * sqrt(var.u1) # cumulative effect sizes
@@ -90,28 +68,64 @@ get_bf <- function(N=100, attrition="weibull", params=list(.8,1), hypothesis=lis
     u1 = rep(multinorm[, 2], each=n) * t,   # random slopes
     treatments = rowSums(treat_dummies * t %*% t(treat_coefs)), # betas for each condition
     error = rnorm(N * n, 0, sqrt(var.e))    # residual
-    )
+  )
 
-    y <- Reduce(`+`, components) # add everything together
+  y <- Reduce(`+`, components) # add everything together
 
-  # introduce attrition to the simulated data
-  if(attrition != F) {
-    dat <- data.frame(dat0, y, hazard = unlist(hazard))
-    suppressWarnings(dat$mis <- rbinom(n = nrow(dat), size = 1, prob = dat$hazard)) # suppress warnings about NAs being created
-    dat$mis <- unsplit(lapply(split(dat$mis, dat$id), function(x) { # create an indicator variable of missing
-      if (any(x == 1, na.rm = TRUE)) { # make all data missing from the first missing value onwards for each person
-        first_mis <- which(x == 1)[1]
-        x[first_mis:length(x)] <- 1
-      }
-      x[is.na(x)] <- 0
-      x
-    }), dat$id)
-    dat$y[dat$mis == 1] <- NA
-  } else { # if no attrition, just return the original data
-    dat <- data.frame(dat0, y)
+  # compute survival curves
+  if(!identical(attrition, FALSE)){
+    surviv <- survival(distributions=attrition, params=params, t.points=t.points)
+    shifted_surviv <- lapply(surviv, function(x) {c(x[-1], NA)})
+  } else {
+    surviv <- list(rep(1, n))
+    shifted_surviv <- c(surviv[-1], NA)
   }
 
-  simplified <- FALSE # initialize indicator variable for simplified models
+  # compute hazard (hazard of t0 represents the probability of dropping out between t0 and t1)
+  hazard <- mapply(function(a, b) {(a - b) / a},
+                   surviv,
+                   shifted_surviv,
+                   SIMPLIFY = FALSE)
+
+  if(length(hazard)>1){
+    names(hazard) <- cond_letters
+  }
+
+  # introduce attrition to the simulated data
+    dat <- data.frame(dat0, y, hazard = unsplit(hazard, f = dat0$treat))
+
+    # extract subject ids
+    ids <- unique(dat$id)
+
+    # for each subject, find the first dropout time (if any)
+    first_dropout <- tapply(
+      1:nrow(dat),
+      dat$id,
+      function(idx) {
+        hazards <- dat$hazard[idx]
+        # Generate dropout decisions for all timepoints at once
+        dropout <- rbinom(n-1, 1, hazards[-n])
+        # Find the first dropout (returns NA if no dropout)
+        which(dropout == 1)[1] + 1  # +1 because hazard[t] affects t+1
+      },
+      simplify = FALSE
+    )
+
+    # mark missing values and consecutive timepoints
+    dat$mis <- 0
+    dropout_indices <- unlist(
+      lapply(ids, function(id) {
+        fd <- first_dropout[[as.character(id)]]
+        if (!is.na(fd)) {
+          idx <- which(dat$id == id)
+          seq(idx[fd], max(idx), by = 1)
+        }
+      })
+    ) # remove marked y-values
+    dat$mis[dropout_indices] <- 1
+    dat$y[dat$mis == 1] <- NA
+
+    simplified <- FALSE # initialize indicator variable for simplified models
 
   # in case of identifiability issues due to high attrition, simplify the model (constrain random effects to be independent)
   model <- tryCatch({
@@ -146,14 +160,14 @@ get_bf <- function(N=100, attrition="weibull", params=list(.8,1), hypothesis=lis
   Sigma <- lapply(est_indices, function(i) as.matrix(vcov(model)[i,i]))
 
   # calculate N_eff
-  n_eff <- get_neff_mis_mv(model=model, N=N, t.points=t.points, surviv=surviv)
+  n_eff <- get_neff(model=model, N=N, t.points=t.points, surviv=surviv)
 
   # evaluate hypotheses
   hyp <- paste(hypothesis, collapse = ";") # put hypotheses in one single string for bain
   n_hyp <- length(hypothesis) # extract the number of hypotheses
 
   # perform Bayesian hypothesis evaluation using bain package
-  bf_res <- bain::bain(x=est, Sigma=Sigma, n=unlist(rep(N, n_cond)),
+  bf_res <- bain::bain(x=est, Sigma=Sigma, n=n_eff,
                        hypothesis=hyp, group_parameters = 1, joint_parameters = 0)
 
   bf_c <- bf_res[["fit"]][["BF.c"]][1] # extract the BF versus the complement hypothesis
