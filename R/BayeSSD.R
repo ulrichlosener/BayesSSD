@@ -1,5 +1,4 @@
-
-#' Title
+#' Perform simulation-based Bayesian sample size determination
 #'
 #' @param eta The desired power level.
 #' @param attrition The attrition pattern (FALSE for no attrition, otherwise "weibull", "modified_weibull", "linear_exponential", "log_logistic", "gompertz" or "non-parametric")
