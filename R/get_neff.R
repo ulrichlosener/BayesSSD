@@ -116,7 +116,7 @@ get_neff <- function(model, N, t.points, surviv) {
       res[[cond]] <- N_eff[indices[cond], indices[cond]] # return only N_eff for one condition
     }
 
-    return(res)
+    return(unlist(res))
 
   } else {
     # Same survival pattern - optimized processing
@@ -143,6 +143,6 @@ get_neff <- function(model, N, t.points, surviv) {
 
     N_eff <- w * n_obs
 
-    return(as.list(diag(N_eff)[indices]))
+    return(diag(N_eff)[indices])
   }
 }
