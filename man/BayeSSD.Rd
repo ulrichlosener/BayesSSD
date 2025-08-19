@@ -2,7 +2,7 @@
 % Please edit documentation in R/BayeSSD.R
 \name{BayeSSD}
 \alias{BayeSSD}
-\title{Title}
+\title{Perform simulation-based Bayesian sample size determination}
 \usage{
 BayeSSD(
   eta = 0.8,
@@ -23,8 +23,8 @@ BayeSSD(
   PMPthres = 0.9,
   sensitivity = F,
   tol = 0.001,
-  N_max = 1000,
-  N_min = 30,
+  N.max = 1000,
+  N.min = 30,
   method = "bfc"
 )
 }
@@ -65,17 +65,17 @@ BayeSSD(
 
 \item{tol}{Tolerance for the deviation of the final result from eta. Higher values may speed up performance.}
 
-\item{N_max}{The maximum sample size to be considered. Lower values may speed up performance.}
+\item{N.max}{The maximum sample size to be considered. Lower values may speed up performance.}
 
-\item{N_min}{The minimum sample size to be considered. Higher values may speed up performance.}
+\item{N.min}{The minimum sample size to be considered. Higher values may speed up performance.}
 
-\item{method}{The method used 3for hypothesis evaluation. If "bfc"/"BFc", then the hypothesis is compared against its complement via the Bayes Factor. If "bf"/"BF", then the first hypothesis is compared to the second one via the Bayes Factor. If "pmp"/"PMP", then the first hypothesis is compared to the whole set of hypotheses including the complement via posterior model probabilities.}
+\item{method}{The method used for hypothesis evaluation. If "bfc"/"BFc", then the hypothesis is compared against its complement via the Bayes Factor. If "bf"/"BF", then the first hypothesis is compared to the second one via the Bayes Factor. If "pmp"/"PMP", then the first hypothesis is compared to the whole set of hypotheses including the complement via posterior model probabilities.}
 }
 \value{
 Returns the sample size (number of subjects) necessary to achieve the desired power level (eta).
 }
 \description{
-Title
+Perform simulation-based Bayesian sample size determination
 }
 \examples{
 BayeSSD(eta=.8, attrition="weibull", params=c(.5,1),

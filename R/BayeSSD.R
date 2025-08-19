@@ -48,7 +48,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
   if(var.u0<0 | var.u1<0 | var.e<0) {stop("all variance components must be positive.")}
   if(BFthres<0) {stop("'BFthres' must be positive.")}
   if(fraction%%1!=0 | fraction<1) {stop("'fraction' must be a positive integer, b=fraction/N.")}
-  if(m<1000) {warning("Results with less than 1000 generated datasets per iteration can be unreliable.")}
+  if(m<1000) {message("Results with less than 1000 generated datasets per iteration can be unreliable.")}
   if((method=="bf" | method=="BF") & (length(hypothesis)!=2)) {stop("Method 'bf' requires exactly two hypotheses.")}
 
   start_time <- Sys.time()
@@ -57,8 +57,8 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
 
   N <- list()
 
-  Nmin <- N_min            # (initial) minimal sample size
-  Nmax <- N_max         # (initial) maximum sample size
+  Nmin <- N.min         # (initial) minimal sample size
+  Nmax <- N.max         # (initial) maximum sample size
   condition <- FALSE    # condition initially FALSE until power criterion is reached
   j <- 1                # iteration counter
 
@@ -66,7 +66,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
 
     N[j] <- round((Nmin + Nmax)/2 - .1, digits = 0)  # current N is the mid point between Nmin and Nmax, rounded to the lower number
     # generate data and store BFs
-    results <- getpower_mis_mv(attrition=attrition, params=params, m=m, N=unlist(N[j]),
+    results <- get_power(attrition=attrition, params=params, m=m, N=unlist(N[j]),
                                log.grow=log.grow, fraction=fraction,
                                t.points=t.points, var.u0=var.u0, var.u1=var.u1,
                                cov=cov, var.e=var.e, eff.sizes=eff.sizes,

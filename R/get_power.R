@@ -29,7 +29,7 @@
 #' hypothesis="a<b<c", PMPthres=.9)
 
 
-getpower_mis_mv <- function(attrition="weibull", params=c(.5,1),
+get_power <- function(attrition="weibull", params=c(.5,1),
                             m=100, N=100, t.points=c(0,1,2,3,4), var.u0=0.03,
                             var.u1=.1, var.e=.02, cov=0, eff.sizes=c(0, .5, .8),
                             fraction=1, log.grow=F, seed=NULL,
@@ -49,11 +49,11 @@ getpower_mis_mv <- function(attrition="weibull", params=c(.5,1),
     bfs <- future.apply::future_lapply(
       Ns,
       function(ss){
-        getbf_mis_mv(ss,
-                     attrition=attrition,
-                     params=params, hypothesis=hypothesis, t.points=t.points,
-                     var.u0=var.u0, var.u1=var.u1, cov=cov, var.e=var.e,
-                     eff.sizes=eff.sizes, fraction=fraction, log.grow=log.grow)
+        get_bf(ss,
+               attrition=attrition,
+               params=params, hypothesis=hypothesis, t.points=t.points,
+               var.u0=var.u0, var.u1=var.u1, cov=cov, var.e=var.e,
+               eff.sizes=eff.sizes, fraction=fraction, log.grow=log.grow)
       },
       future.seed = TRUE
     )
@@ -78,5 +78,3 @@ getpower_mis_mv <- function(attrition="weibull", params=c(.5,1),
               power_bf=power_bf,
               prop_simplified=prop_simplified))
 }
-
-# END OF FUNCTION --------------------------------------------------------------
