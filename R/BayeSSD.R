@@ -39,6 +39,12 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
                     hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.001,
                     N.max=1000, N.min=30, method="bfc") {
 
+  # if function is interrupted mid-run, reset parallel processing behavior and print message
+  on.exit({
+    future::plan(future::sequential)
+    message("The Bayesian SSD was interrupted by the user.")
+  })
+
   # error and warning messages in case of incorrect input
   if(eta<0 | eta>1) {stop("'eta' (the desired power level) must be between 0 and 1.")}
   if(m%%1!=0 | m<1) {stop("'m' must be a positive integer.")}
