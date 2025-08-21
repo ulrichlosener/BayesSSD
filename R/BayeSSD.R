@@ -99,7 +99,9 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
       # Calculate time metrics
       elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
       avg_time_per_iter <- elapsed / j
-      remaining_time <- avg_time_per_iter * (16 - j)  # max_iter = 16
+      range <- Nmax - Nmin + 1 # range of possible values
+      av_it <- round(log(range, base=2)) # approximation of average numbers of iterations
+      remaining_time <- avg_time_per_iter * (ave_it - j)
 
       # Print progress
       cat(
