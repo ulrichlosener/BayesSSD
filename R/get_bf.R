@@ -18,7 +18,7 @@
 #' @examples getbf_mis_mv(N=100, attrition="weibull", params=list(.8,1), hypothesis=list("a<b<c","a=b=c"), t.points=c(0,1,2), var.u0=.01, var.u1=.01, cov=0, var.e=.01, eff.sizes=c(0, .5, .8), fraction=1, log.grow=F)
 
 get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("a<b<c","a=b=c"),
-                                 t.points=c(0,1,2), var.u0=.01, var.u1=.01, cov=0, var.e=.01, eff.sizes=c(0, .5, .8),
+                                 t.points=c(0,1,2), var.u0=.01, var.u1=.002, cov=0, var.e=.01, eff.sizes=c(0.8, -.45, .-.46),
                                  fraction=1, log.grow=F){
 
   # determine number of conditions from hypotheses
@@ -182,7 +182,5 @@ get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("
   return(list(bf_c=bf_c,
               PMPc=PMPc,
               bf12=bf12,
-              simplified=simplified,
-              n_cond=n_cond,
-              conditions=cond_letters))
+              simplified=simplified))
 }
