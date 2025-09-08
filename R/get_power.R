@@ -35,11 +35,13 @@ get_power <- function(attrition="weibull", params=c(.5,1),
                             fraction=1, log.grow=F, seed=NULL,
                             hypothesis="a<b<c", PMPthres=.9, BFthres=5){
 
-  if(!is.null(seed)) {set.seed(seed)}  # set user-specified seed for reproducibility
+  if(!is.null(seed)) {set.seed(seed)} # set user-specified seed for reproducibility
 
 
   suppressWarnings({ # suppress warning "package 'future' was built under R version 4.4.3"
   suppressMessages({ # supress messages about singular fit in MLMs
+
+  future::plan(future::sequential)  # Reset plan to avoid unexpected leftover parallel behavior
 
   future::plan(future::multisession, workers = future::availableCores() - 1)  # Use all but one core
 
@@ -58,7 +60,7 @@ get_power <- function(attrition="weibull", params=c(.5,1),
       future.seed = TRUE
     )
 
-  future::plan(future::sequential)  # Reset plan to avoid unexpected parallel behavior later
+  future::plan(future::sequential) # Reset plan to avoid unexpected parallel behavior later
   })
   })
   # extract number of simplified models due to identification issues
