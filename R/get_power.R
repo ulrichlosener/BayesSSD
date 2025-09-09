@@ -71,9 +71,9 @@ get_power <- function(attrition="weibull", params=c(.5,1),
   pmp <- vapply(bfs, function(x) {as.numeric(x[[2]])}, numeric(1))
   bf <- vapply(bfs, function(x) {as.numeric(x[[3]])}, numeric(1))
 
-  power_bfc <- mean(bfc > BFthres)
-  power_pmp <- mean(unlist(pmp) > PMPthres)
-  power_bf <- mean(bf > BFthres)
+  power_bfc <- mean(bfc>BFthres)
+  power_pmp <- mean(pmp>PMPthres)
+  power_bf <- mean(bf>BFthres)
 
   return(list(power_bfc=power_bfc,
               power_pmp=power_pmp,
