@@ -67,12 +67,12 @@ get_power <- function(attrition="weibull", params=c(.5,1),
   prop_simplified <- mean(unlist(sapply(bfs, function(x) {x[4]})))
 
   # extract BFs and PMPs
-  bfc <- sapply(bfs, function(x) {x[1]})
-  pmp <- sapply(bfs, function(x) {x[2]})
-  bf <- sapply(bfs, function(x) {x[3]})
+  bfc <- vapply(bfs, function(x) {as.numeric(x[[1]])}, numeric(1))
+  pmp <- vapply(bfs, function(x) {as.numeric(x[[2]])}, numeric(1))
+  bf <- vapply(bfs, function(x) {as.numeric(x[[3]])}, numeric(1))
 
   power_bfc <- mean(bfc > BFthres)
-  power_pmp <- mean(pmp > PMPthres)
+  power_pmp <- mean(unlist(pmp) > PMPthres)
   power_bf <- mean(bf > BFthres)
 
   return(list(power_bfc=power_bfc,
