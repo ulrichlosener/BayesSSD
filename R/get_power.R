@@ -66,14 +66,36 @@ get_power <- function(attrition="weibull", params=c(.5,1),
   # extract number of simplified models due to identification issues
   prop_simplified <- mean(unlist(sapply(bfs, function(x) {x[4]})))
 
-  # extract BFs and PMPs
-  bfc <- vapply(bfs, function(x) {as.numeric(x[[1]])}, numeric(1))
-  pmp <- vapply(bfs, function(x) {as.numeric(x[[2]])}, numeric(1))
-  bf <- vapply(bfs, function(x) {as.numeric(x[[3]])}, numeric(1))
+  # extract BFs and PMPs, handling NULL cases without error
+  bfc <- vapply(bfs, function(x) {
+    if (length(x[[1]]) == 0) {
+      NA_real_
+    } else {
+      as.numeric(x[[1]])
+    }
+  }, numeric(1))
+  pmp <- vapply(bfs, function(x) {
+    if (length(x[[2]]) == 0) {
+      NA_real_
+    } else {
+      as.numeric(x[[1]])
+    }
+  }, numeric(1))
+  bf <- vapply(bfs, function(x) {
+    if (length(x[[3]]) == 0) {
+      NA_real_
+    } else {
+      as.numeric(x[[1]])
+    }
+  }, numeric(1))
 
-  power_bfc <- mean(bfc>BFthres)
-  power_pmp <- mean(pmp>PMPthres)
-  power_bf <- mean(bf>BFthres)
+  # bfc <- vapply(bfs, function(x) {as.numeric(x[[1]])}, numeric(1))
+  # pmp <- vapply(bfs, function(x) {as.numeric(x[[2]])}, numeric(1))
+  # bf <- vapply(bfs, function(x) {as.numeric(x[[3]])}, numeric(1))
+
+  power_bfc <- mean(bfc>BFthres, na.rm = T)
+  power_pmp <- mean(pmp>PMPthres, na.rm = T)
+  power_bf <- mean(bf>BFthres, na.rm = T)
 
   return(list(power_bfc=power_bfc,
               power_pmp=power_pmp,
