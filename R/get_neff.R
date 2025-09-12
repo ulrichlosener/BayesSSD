@@ -19,12 +19,22 @@
 #' get_neff_mis_mv(model = lmermodel, N=100, t.points=c(0,1,2,3,4),
 #'                surviv=list(c(1,.9,.8,.6,.5), c(1,.85,.7,.5,.3), c(1,.95,.9,.8,.7)))
 
-get_neff <- function(model, t.points, surviv) {
+get_neff <- function(model, surviv) {
 
+  # Extract number of subjects
   N <- as.numeric(lme4::ngrps(model))
-  n <- length(t.points) # number of observations per person
 
-  # Check number of treatment conditions
+  # Get the subject variable name
+  subject_name <- names(lme4::ranef(model))
+
+  # Count measurements per subject
+  measurements_per_subject <- max(table(model@frame[[subject_name]]))
+
+  # Extract all time points and the number of time points per person
+  t.points <- unique(model@frame[["t"]])
+  n <- length(t.points)
+
+  # Extract number of treatment conditions
   treat_levels <- unique(model@frame[["treat"]])
   num_conditions <- length(treat_levels)
 
