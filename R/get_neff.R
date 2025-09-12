@@ -19,8 +19,9 @@
 #' get_neff_mis_mv(model = lmermodel, N=100, t.points=c(0,1,2,3,4),
 #'                surviv=list(c(1,.9,.8,.6,.5), c(1,.85,.7,.5,.3), c(1,.95,.9,.8,.7)))
 
-get_neff <- function(model, N, t.points, surviv) {
+get_neff <- function(model, t.points, surviv) {
 
+  N <- as.numeric(lme4::ngrps(model))
   n <- length(t.points) # number of observations per person
 
   # Check number of treatment conditions
@@ -84,8 +85,7 @@ get_neff <- function(model, N, t.points, surviv) {
   indices <- c(2, seq(2 + num_conditions, length.out = num_conditions-1)) # positions of relevant estimates
 
   if(is.list(surviv) && length(surviv) > 1) {
-
-    # Different survival patterns
+    # Different survival patterns per condition
     res <- vector("list", num_conditions)
 
     for(cond in 1:num_conditions) {
@@ -119,7 +119,7 @@ get_neff <- function(model, N, t.points, surviv) {
     return(unlist(res))
 
   } else {
-    # Same survival pattern - optimized processing
+    # Same survival pattern
     V_sum <- matrix(0, p, p)
     W_sum <- matrix(0, p, p)
 
@@ -146,3 +146,5 @@ get_neff <- function(model, N, t.points, surviv) {
     return(diag(N_eff)[indices])
   }
 }
+
+

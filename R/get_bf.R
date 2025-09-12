@@ -73,10 +73,10 @@ get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("
   y <- Reduce(`+`, components) # add everything together
 
   # compute survival curves
-  if(!identical(attrition, FALSE)){
+  if(!identical(attrition, FALSE)){ # with attrition
     surviv <- survival(distributions=attrition, params=params, t.points=t.points)
     shifted_surviv <- lapply(surviv, function(x) {c(x[-1], NA)})
-  } else {
+  } else { # without attrition
     surviv <- list(rep(1, n))
     shifted_surviv <- c(surviv[-1], NA)
   }
@@ -160,7 +160,7 @@ get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("
   Sigma <- lapply(est_indices, function(i) as.matrix(vcov(model)[i,i]))
 
   # calculate N_eff
-  n_eff <- get_neff(model=model, N=N, t.points=t.points, surviv=surviv)
+  n_eff <- get_neff(model=model, t.points=t.points, surviv=surviv)
 
   # evaluate hypotheses
   hyp <- paste(hypothesis, collapse = ";") # put hypotheses in one single string for bain
