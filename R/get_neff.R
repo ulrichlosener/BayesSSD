@@ -36,7 +36,7 @@ get_neff <- function(model, surviv) {
 
   # Extract number of treatment conditions
   treat_levels <- unique(model@frame[["treat"]])
-  num_conditions <- length(treat_levels)
+  n_cond <- length(treat_levels)
 
   # Extract model components - optimized extraction
   reVar <- lme4::VarCorr(model)
@@ -45,16 +45,16 @@ get_neff <- function(model, surviv) {
   Z <- t(Zt)
 
   # Create design matrices - optimized using matrix templates
-  design_matrices <- vector("list", num_conditions)
+  design_matrices <- vector("list", n_cond)
   base_design <- cbind(intercept = rep(1, n), t = t.points)
 
   # Create treatment indicator templates
-  treat_template <- matrix(0, n, num_conditions - 1)
-  colnames(treat_template) <- paste0("treat", 1:(num_conditions - 1))
+  treat_template <- matrix(0, n, n_cond - 1)
+  colnames(treat_template) <- paste0("treat", 1:(n_cond - 1))
   time_treat_template <- treat_template * t.points
-  colnames(time_treat_template) <- paste0("t:treat", 1:(num_conditions - 1))
+  colnames(time_treat_template) <- paste0("t:treat", 1:(n_cond - 1))
 
-  for(i in 1:num_conditions) {
+  for(i in 1:n_cond) {
     if(i == 1) {
       # Control condition
       design_matrices[[i]] <- cbind(base_design, treat_template, time_treat_template)
@@ -92,13 +92,13 @@ get_neff <- function(model, surviv) {
 
   # Initialize result storage
   p <- ncol(design_matrices[[1]])
-  indices <- c(2, seq(2 + num_conditions, length.out = num_conditions-1)) # positions of relevant estimates
+  indices <- c(2, seq(2 + n_cond, length.out = n_cond-1)) # positions of relevant estimates
 
   if(is.list(surviv) && length(surviv) > 1) {
     # Different survival patterns per condition
-    res <- vector("list", num_conditions)
+    res <- vector("list", n_cond)
 
-    for(cond in 1:num_conditions) {
+    for(cond in 1:n_cond) {
       V_sum <- matrix(0, p, p)
       W_sum <- matrix(0, p, p)
 
@@ -121,7 +121,7 @@ get_neff <- function(model, surviv) {
       # Extract number of non-missing observations for the current condition
       n_obs <- nrow(model@frame[model@frame$treat == treat_levels[cond],])
 
-      N_eff <- w * n_obs
+      N_eff <- w * n_obs # multiply weight w with number of observations in this sepcific condition
 
       res[[cond]] <- N_eff[indices[cond], indices[cond]] # return only N_eff for one condition
     }
@@ -137,7 +137,7 @@ get_neff <- function(model, surviv) {
     for(k in 1:n) {
       surv_weight <- surviv[[1]][k]
 
-      for(cond in 1:num_conditions) {
+      for(cond in 1:n_cond) {
         X_sub <- design_matrices[[cond]][row_indices[[k]], , drop = FALSE]
         V_sum <- V_sum + surv_weight * crossprod(X_sub, V_inverses[[k]] %*% X_sub)
         W_sum <- W_sum + surv_weight * crossprod(X_sub, W_inverses[[k]] %*% X_sub)
@@ -147,11 +147,11 @@ get_neff <- function(model, surviv) {
     var_beta_hat <- tryCatch(solve(V_sum), error = function(e) MASS::ginv(V_sum))
     var_betahat_indep <- tryCatch(solve(W_sum), error = function(e) MASS::ginv(W_sum))
 
-    w <- var_betahat_indep / var_beta_hat
+    w <- var_betahat_indep / var_beta_hat # calculate weight w
 
-    n_obs <- nrow(model@frame)
+    n_obs <- nrow(model@frame) # extract actual number of observations (attrition)
 
-    N_eff <- w * n_obs
+    N_eff <- w * n_obs / n_cond # divide N_eff by number of conditions, because they all have the same number of observations
 
     return(diag(N_eff)[indices])
   }
