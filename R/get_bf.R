@@ -167,20 +167,30 @@ get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("
   n_hyp <- length(hypothesis) # extract the number of hypotheses
 
   # perform Bayesian hypothesis evaluation using bain package
-  bf_res <- bain::bain(x=est, Sigma=Sigma, n=n_eff,
+  result <- tryCatch({
+    bf_res <- bain::bain(x=est, Sigma=Sigma, n=n_eff,
                        hypothesis=hyp, group_parameters = 1, joint_parameters = 0)
+    # extract the BF and PMPs, if there are exactly two hypotheses, extract the BF of H1 versus H2
+    if(n_hyp == 2){
+      list(bf_c = bf_res[["fit"]][["BF.c"]][1],
+           PMPc = bf_res[["fit"]][["PMPc"]][1],
+           bf12 = bf_res[["BFmatrix"]][1,2],
+           simplified = simplified)
+    } else {
+      list(bf_c = bf_res[["fit"]][["BF.c"]][1],
+           PMPc = bf_res[["fit"]][["PMPc"]][1],
+           bf12 = NA,
+           simplified = simplified)
+    }
 
-  bf_c <- bf_res[["fit"]][["BF.c"]][1] # extract the BF versus the complement hypothesis
-  PMPc <- bf_res[["fit"]][["PMPc"]][1] # extract the posterior model probabilities including all hypotheses plus the complement of the union
-
-  bf12 <- NA
-  if(n_hyp==2){ # if there are two hypotheses, extract the BF of H1 versus H2
-    bf12 <- bf_res[["BFmatrix"]][1,2]
-  }
+  }, error = function(e){ # in case of bain error, return NA
+    message(paste("bain error, returning NA:", e$message))
+    list(bf_c = NA,
+         PMPc = NA,
+         bf12 = NA,
+         simplified = simplified)
+  })
 
   # return results
-  return(list(bf_c=bf_c,
-              PMPc=PMPc,
-              bf12=bf12,
-              simplified=simplified))
+  return(result)
 }
