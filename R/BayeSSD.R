@@ -100,7 +100,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
         pow <- results$power_bf
       }
 
-      remaining_time <- avg_time_per_iter * (ave_it - j)
+      remaining_time <- avg_time_per_iter * (av_it - j)
 
       # Print progress
       cat(
