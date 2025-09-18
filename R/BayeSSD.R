@@ -63,12 +63,6 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
     condition <- FALSE    # condition initially FALSE until power criterion is reached
     j <- 1                # iteration counter
 
-    # Calculate time metrics
-    elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
-    avg_time_per_iter <- elapsed / j
-    range <- N.max - N.min + 1 # range of possible values
-    av_it <- round(log(range, base=2)) # approximation of average numbers of iterations
-
     while(condition == F){
 
       N[j] <- round((N.min + N.max)/2 - .1, digits = 0)  # current N is the mid point between N.min and N.max, rounded to the lower number
@@ -100,6 +94,11 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
         pow <- results$power_bf
       }
 
+      # Calculate time metrics
+      elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
+      avg_time_per_iter <- elapsed / j
+      range <- N.max - N.min + 1 # range of possible values
+      av_it <- round(log(range, base=2)) # approximation of average numbers of iterations
       remaining_time <- avg_time_per_iter * (av_it - j)
 
       # Print progress
