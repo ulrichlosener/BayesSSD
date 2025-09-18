@@ -62,6 +62,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
 
     condition <- FALSE    # condition initially FALSE until power criterion is reached
     j <- 1                # iteration counter
+    av_it <- round(log((N.max - N.min + 1), base=2)) # approximation of average numbers of iterations
 
     while(condition == F){
 
@@ -97,8 +98,6 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
       # Calculate time metrics
       elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
       avg_time_per_iter <- elapsed / j
-      range <- N.max - N.min + 1 # range of possible values
-      av_it <- round(log(range, base=2)) # approximation of average numbers of iterations
       remaining_time <- avg_time_per_iter * (av_it - j)
 
       # Print progress
@@ -120,7 +119,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
         }
 
       # if N increases by only 1 or f power level is very close to desired power level, condition is met and the algorithm stops
-      if ((N[j] == N.min+1 | N.max == N.min) | round(abs(pow - eta), 8) <= tol) {
+      if ((N[j] == N.min + 1 | N.max == N.min) | round(abs(pow - eta), 8) <= tol) {
         condition <- TRUE
         total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
         cat(sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f) \n",
