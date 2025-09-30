@@ -33,11 +33,11 @@
 #' N_max=1000)
 
 BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
-                    m=100, t.points=c(0,1,2,3,4), var.u0=0.01,
-                    var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .5, .8),
-                    BFthres=5, fraction=1, log.grow=F, seed=NULL,
-                    hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.001,
-                    N.max=1000, N.min=30, method="bfc") {
+                         m=10000, t.points=c(0,1,2,3,4), var.u0=0.01,
+                         var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .5, .8),
+                         BFthres=5, fraction=1, log.grow=F, seed=NULL,
+                         hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.01,
+                         N.max=1000, N.min=30, method="bfc") {
 
   # Use calling handlers to catch interrupts
   withCallingHandlers({
@@ -62,17 +62,28 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
 
     condition <- FALSE    # condition initially FALSE until power criterion is reached
     j <- 1                # iteration counter
+    pow <- 0              # initialize power
     av_it <- round(log((N.max - N.min + 1), base=2)) # approximation of average numbers of iterations
 
     while(condition == F){
 
       N[j] <- round((N.min + N.max)/2 - .1, digits = 0)  # current N is the mid point between N.min and N.max, rounded to the lower number
+
+      # set m according to iteration/difference between actual (pow) and desired power (eta)
+      if(m>=5000){
+        if(j==1 | abs(pow-eta) > .1){ # in the first iteration or if the difference between pow and eta is at least .1, set m to 1000
+          current_m <- 1000
+        } else {
+          current_m <- m
+        }
+      }
+
       # generate data and store BFs
-      results <- get_power(attrition=attrition, params=params, m=m, N=unlist(N[j]),
-                                 log.grow=log.grow, fraction=fraction,
-                                 t.points=t.points, var.u0=var.u0, var.u1=var.u1,
-                                 cov=cov, var.e=var.e, eff.sizes=eff.sizes,
-                                 BFthres=BFthres, PMPthres=PMPthres, hypothesis=hypothesis)
+      results <- get_power(attrition=attrition, params=params, m=current_m, N=unlist(N[j]),
+                           log.grow=log.grow, fraction=fraction,
+                           t.points=t.points, var.u0=var.u0, var.u1=var.u1,
+                           cov=cov, var.e=var.e, eff.sizes=eff.sizes,
+                           BFthres=BFthres, PMPthres=PMPthres, hypothesis=hypothesis)
 
       # check if condition is met
       if(method=="bfc" | method=="BFc" | method=="bf_c" | method=="BF_c"){
@@ -113,10 +124,10 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
                   j, results$prop_simplified * 100)
         )
       } else if(results$prop_simplified < .001 & results$prop_simplified > 0) {
-          cat(
-            "< 0.1% of models required simplification (independent random effects) due to high attrition (too little observations) \n"
-          )
-        }
+        cat(
+          "< 0.1% of models required simplification (independent random effects) due to high attrition (too little observations) \n"
+        )
+      }
 
       # if N increases by only 1 or f power level is very close to desired power level, condition is met and the algorithm stops
       if ((N[j] == N.min + 1 | N.max == N.min) | round(abs(pow - eta), 8) <= tol) {
