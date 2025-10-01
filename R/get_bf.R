@@ -168,7 +168,7 @@ get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("
 
   # perform Bayesian hypothesis evaluation using bain package
   result <- tryCatch({
-    bf_res <- bain::bain(x=est, Sigma=Sigma, n=n_eff,
+    bf_res <- bain::bain(x=est, Sigma=Sigma, n=n_eff, fraction=fraction
                        hypothesis=hyp, group_parameters = 1, joint_parameters = 0)
     # extract the BF and PMPs, if there are exactly two hypotheses, extract the BF of H1 versus H2
     if(n_hyp == 2){

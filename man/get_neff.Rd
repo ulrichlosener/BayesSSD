@@ -4,16 +4,16 @@
 \alias{get_neff}
 \title{Calculate the effective sample size in a multilevel model with attrition for multiple treatment groups}
 \usage{
-get_neff(model, N, t.points, surviv)
+get_neff(model, surviv)
 }
 \arguments{
 \item{model}{A multilevel model of class 'mermod' (specifically 'lmerMod') with ≥2 treatment conditions}
 
+\item{surviv}{Vector (or list of vectors) containing the proportion of subjects remaining at each timepoint}
+
 \item{N}{Number of subjects in the model}
 
 \item{t.points}{Vector containing the measurement occasions}
-
-\item{surviv}{Vector (or list of vectors) containing the proportion of subjects remaining at each timepoint}
 }
 \value{
 Returns the effective sample size for each treatment condition's effects

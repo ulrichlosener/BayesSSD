@@ -7,14 +7,14 @@
 get_bf(
   N = 100,
   attrition = "weibull",
-  params = list(0.8, 1),
+  params = c(0.8, 1),
   hypothesis = list("a<b<c", "a=b=c"),
   t.points = c(0, 1, 2),
   var.u0 = 0.01,
-  var.u1 = 0.01,
+  var.u1 = 0.002,
   cov = 0,
   var.e = 0.01,
-  eff.sizes = c(0, 0.5, 0.8),
+  eff.sizes = c(0.8, -0.45, . - 0.46),
   fraction = 1,
   log.grow = F
 )

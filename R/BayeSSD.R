@@ -1,9 +1,9 @@
 #' Perform simulation-based Bayesian sample size determination
 #'
 #' @param eta The desired power level.
-#' @param attrition The attrition pattern (FALSE for no attrition, otherwise "weibull", "modified_weibull", "linear_exponential", "log_logistic", "gompertz" or "non-parametric")
-#' @param params The parameters passed to the survival function specified in "attrition". First parameter is omega, second is gamma.
-#' @param m The number of datasets simulated in each iteration. The higher m, the more accurate the power level but the higher the computation cost
+#' @param attrition The attrition pattern (`FALSE` for no attrition, otherwise `weibull`, `modified_weibull`, `linear_exponential`, `log_logistic`, `gompertz` or `non-parametric`)
+#' @param params The parameters passed to the survival function specified in `attrition`. First parameter is omega, second gamma and third (if applicable) is kappa.
+#' @param m The number of datasets simulated in each iteration. The higher `m`, the more accurate the power level but the higher the computation time
 #' @param t.points The points in time of measurement. Can be non-equidistant.
 #' @param var.u0 The intercept variance.
 #' @param var.u1 The slope variance.
@@ -11,18 +11,18 @@
 #' @param var.e The residual variance.
 #' @param eff.sizes The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.
 #' @param fraction The fraction of information used to construct the prior for the Bayes Factor.
-#' @param log.grow Use log-linear growth?
+#' @param log.grow Logical. Use log-linear growth?
 #' @param BFthres The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.
-#' @param seed Set a seed for reproducibility
-#' @param hypothesis The hypothesis to be evaluated. Treatment groups are coded as "a", "b", "c", etc.
+#' @param seed Set a seed for reproducibility?
+#' @param hypothesis List of the hypotheses to be evaluated. Treatment groups are coded as `a`, `b`, `c`, etc.
 #' @param PMPthres The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.
-#' @param sensitivity Logical. Conduct a sensitivity analysis for the parameter fraction?
-#' @param tol Tolerance for the deviation of the final result from eta. Higher values may speed up performance.
+#' @param sensitivity Logical. Conduct a sensitivity analysis for the parameter `fraction`?
+#' @param tol Tolerance for the deviation of the final result from `eta`. Higher values may speed up performance.
 #' @param N.max The maximum sample size to be considered. Lower values may speed up performance.
 #' @param N.min The minimum sample size to be considered. Higher values may speed up performance.
-#' @param method The method used for hypothesis evaluation. If "bfc"/"BFc", then the hypothesis is compared against its complement via the Bayes Factor. If "bf"/"BF", then the first hypothesis is compared to the second one via the Bayes Factor. If "pmp"/"PMP", then the first hypothesis is compared to the whole set of hypotheses including the complement via posterior model probabilities.
+#' @param method The method used for hypothesis evaluation. If `bfc`/`BFc`, then the hypothesis is compared against its complement via the Bayes Factor. If `bf`/`BF`, then the first hypothesis is compared to the second one via the Bayes Factor. If `pmp`/`PMP`, then the first hypothesis is compared to the whole set of hypotheses including the complement via posterior model probabilities.
 #'
-#' @return Returns the sample size (number of subjects) necessary to achieve the desired power level (eta).
+#' @return Returns the sample size (number of subjects) necessary to achieve the desired power level `eta`.
 #' @export
 #' @examples
 #' BayeSSD(eta=.8, attrition="weibull", params=c(.5,1),
