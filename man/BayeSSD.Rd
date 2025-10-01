@@ -57,7 +57,7 @@ BayeSSD(
 
 \item{seed}{Set a seed for reproducibility?}
 
-\item{hypothesis}{The hypothesis to be evaluated. Treatment groups are coded as \code{a}, \code{b}, \code{c}, etc.}
+\item{hypothesis}{List of the hypotheses to be evaluated. Treatment groups are coded as \code{a}, \code{b}, \code{c}, etc.}
 
 \item{PMPthres}{The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.}
 
