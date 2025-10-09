@@ -10,7 +10,6 @@
 #' @param cov The covariance between intercept variance and slope variance.
 #' @param var.e The residual variance.
 #' @param eff.sizes The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.
-#' @param fraction The fraction of information used to construct the prior for the Bayes Factor.
 #' @param log.grow Logical. Use log-linear growth?
 #' @param BFthres The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.
 #' @param seed Set a seed for reproducibility?
@@ -35,7 +34,7 @@
 BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
                          m=10000, t.points=c(0,1,2,3,4), var.u0=0.01,
                          var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .5, .8),
-                         BFthres=5, fraction=1, log.grow=F, seed=NULL,
+                         BFthres=5, log.grow=F, seed=NULL,
                          hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.01,
                          N.max=1000, N.min=30, method="bfc") {
 
@@ -81,7 +80,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
 
         # generate data and store BFs
         results <- get_power(attrition=attrition, params=params, m=current_m, N=unlist(N[j]),
-                             log.grow=log.grow, fraction=fraction,
+                             log.grow=log.grow, fraction=1,
                              t.points=t.points, var.u0=var.u0, var.u1=var.u1,
                              cov=cov, var.e=var.e, eff.sizes=eff.sizes,
                              BFthres=BFthres, PMPthres=PMPthres, hypothesis=hypothesis)
@@ -197,7 +196,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
             # Calculate time metrics
             elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
             avg_time_per_iter <- elapsed / j
-            remaining_time <- avg_time_per_iter * (av_it - j) * (4-i)
+            remaining_time <- avg_time_per_iter * (av_it - j)
 
             # Print progress
             cat(
