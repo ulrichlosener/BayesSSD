@@ -207,8 +207,8 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
             # Warn about simplified models due to too little observations
             if(results$prop_simplified >= .001) {
               cat(
-                sprintf("Iteration %d: %.1f%% of models required simplification (independent random effects) due to high attrition (too little observations) \n",
-                        j, results$prop_simplified * 100)
+                sprintf("%.1f%% of models required simplification (independent random effects) due to high attrition (too little observations) \n",
+                        results$prop_simplified * 100)
               )
             } else if(results$prop_simplified < .001 & results$prop_simplified > 0) {
               cat(
