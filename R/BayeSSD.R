@@ -72,7 +72,7 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
       while(condition == F){
 
         N_mid <- round((N_min + N_max)/2 - .1, digits = 0)  # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
-        N[j] <- candidate_N[which(abs(candidate_N - N_mid) == min(abs(candidate_N - N_mid)))] # find the nearest candidate value for N to N_mid
+        N[[j]] <- candidate_N[which.min(abs(candidate_N - N_mid))]   # find the nearest candidate value for N to N_mid
 
         # set m according to iteration/difference between actual (pow) and desired power (eta)
         if(m>=5000){
@@ -92,22 +92,25 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
 
         # check if condition is met
         if(method=="bfc" | method=="BFc" | method=="bf_c" | method=="BF_c"){
-          ifelse(results$power_bfc>=eta,
-                 N_max <- unlist(N[j]) - n_cond,
-                 N_min <- unlist(N[j]) + n_cond
-          )
+          if(results$power_bfc>=eta){
+            N_max <- unlist(N[j]) - n_cond
+          } else {
+            N_min <- unlist(N[j]) + n_cond
+          }
           pow <- results$power_bfc
         } else if(method=="pmp" | method=="PMP"){
-          ifelse(results$power_pmp>=eta,
-                 N_max <- unlist(N[j]) - n_cond,
-                 N_min <- unlist(N[j]) + n_cond
-          )
+          if(results$power_pmp>=eta){
+            N_max <- unlist(N[j]) - n_cond
+          } else {
+            N_min <- unlist(N[j]) + n_cond
+          }
           pow <- results$power_pmp
         } else if(method=="bf" | method=="BF"){
-          ifelse(results$power_bf>=eta,
-                 N_max <- unlist(N[j]) - n_cond,
-                 N_min <- unlist(N[j]) + n_cond
-          )
+          if(results$power_bf>=eta){
+            N_max <- unlist(N[j]) - n_cond
+          } else{
+            N_min <- unlist(N[j]) + n_cond
+          }
           pow <- results$power_bf
         }
 
@@ -181,22 +184,25 @@ BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
 
           # check if condition is met
           if(method=="bfc" | method=="BFc" | method=="bf_c" | method=="BF_c"){
-            ifelse(results$power_bfc>=eta,
-                   N_max <- unlist(N[j]) - n_cond,
-                   N_min <- unlist(N[j]) + n_cond
-            )
+            if(results$power_bfc>=eta){
+              N_max <- unlist(N[j]) - n_cond
+            } else {
+              N_min <- unlist(N[j]) + n_cond
+            }
             pow <- results$power_bfc
           } else if(method=="pmp" | method=="PMP"){
-            ifelse(results$power_pmp>=eta,
-                   N_max <- unlist(N[j]) - n_cond,
-                   N_min <- unlist(N[j]) + n_cond
-            )
+            if(results$power_pmp>=eta){
+              N_max <- unlist(N[j]) - n_cond
+            } else {
+              N_min <- unlist(N[j]) + n_cond
+            }
             pow <- results$power_pmp
           } else if(method=="bf" | method=="BF"){
-            ifelse(results$power_bf>=eta,
-                   N_max <- unlist(N[j]) - n_cond,
-                   N_min <- unlist(N[j]) + n_cond
-            )
+            if(results$power_bf>=eta){
+              N_max <- unlist(N[j]) - n_cond
+            } else{
+              N_min <- unlist(N[j]) + n_cond
+            }
             pow <- results$power_bf
           }
 
