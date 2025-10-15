@@ -1,4 +1,4 @@
-Package: BayeSSD
+Package: BayesSSD
 Title: Bayesian sample size determination for longitudinal experiments
 Version: 0.1.0
 Authors@R: 

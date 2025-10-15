@@ -6,36 +6,43 @@
 \usage{
 BayeSSD(
   eta = 0.8,
+  hypothesis = "a<b<c",
+  eff.sizes = c(0, 0.5, 0.8),
+  BFthres = 5,
+  PMPthres = 0.9,
+  method = "bfc",
   attrition = "weibull",
   params = c(0.5, 1),
-  m = 10000,
   t.points = c(0, 1, 2, 3, 4),
   var.u0 = 0.01,
   var.u1 = 0.1,
   var.e = 0.01,
   cov = 0,
-  eff.sizes = c(0, 0.5, 0.8),
-  BFthres = 5,
-  fraction = 1,
+  m = 10000,
   log.grow = F,
   seed = NULL,
-  hypothesis = "a<b<c",
-  PMPthres = 0.9,
   sensitivity = F,
   tol = 0.01,
   N.max = 1000,
-  N.min = 30,
-  method = "bfc"
+  N.min = 30
 )
 }
 \arguments{
 \item{eta}{The desired power level.}
 
+\item{hypothesis}{List of the hypotheses to be evaluated. Treatment groups are coded as \code{a}, \code{b}, \code{c}, etc.}
+
+\item{eff.sizes}{The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.}
+
+\item{BFthres}{The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.}
+
+\item{PMPthres}{The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.}
+
+\item{method}{The method used for hypothesis evaluation. If \code{bfc}/\code{BFc}, then the hypothesis is compared against its complement via the Bayes Factor. If \code{bf}/\code{BF}, then the first hypothesis is compared to the second one via the Bayes Factor. If \code{pmp}/\code{PMP}, then the first hypothesis is compared to the whole set of hypotheses including the complement via posterior model probabilities.}
+
 \item{attrition}{The attrition pattern (\code{FALSE} for no attrition, otherwise \code{weibull}, \code{modified_weibull}, \code{linear_exponential}, \code{log_logistic}, \code{gompertz} or \code{non-parametric})}
 
 \item{params}{The parameters passed to the survival function specified in \code{attrition}. First parameter is omega, second gamma and third (if applicable) is kappa.}
-
-\item{m}{The number of datasets simulated in each iteration. The higher \code{m}, the more accurate the power level but the higher the computation time}
 
 \item{t.points}{The points in time of measurement. Can be non-equidistant.}
 
@@ -47,19 +54,11 @@ BayeSSD(
 
 \item{cov}{The covariance between intercept variance and slope variance.}
 
-\item{eff.sizes}{The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.}
-
-\item{BFthres}{The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.}
-
-\item{fraction}{The fraction of information used to construct the prior for the Bayes Factor.}
+\item{m}{The number of datasets simulated in each iteration. The higher \code{m}, the more accurate the power level but the higher the computation time}
 
 \item{log.grow}{Logical. Use log-linear growth?}
 
 \item{seed}{Set a seed for reproducibility?}
-
-\item{hypothesis}{List of the hypotheses to be evaluated. Treatment groups are coded as \code{a}, \code{b}, \code{c}, etc.}
-
-\item{PMPthres}{The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.}
 
 \item{sensitivity}{Logical. Conduct a sensitivity analysis for the parameter \code{fraction}?}
 
@@ -68,8 +67,6 @@ BayeSSD(
 \item{N.max}{The maximum sample size to be considered. Lower values may speed up performance.}
 
 \item{N.min}{The minimum sample size to be considered. Higher values may speed up performance.}
-
-\item{method}{The method used for hypothesis evaluation. If \code{bfc}/\code{BFc}, then the hypothesis is compared against its complement via the Bayes Factor. If \code{bf}/\code{BF}, then the first hypothesis is compared to the second one via the Bayes Factor. If \code{pmp}/\code{PMP}, then the first hypothesis is compared to the whole set of hypotheses including the complement via posterior model probabilities.}
 }
 \value{
 Returns the sample size (number of subjects) necessary to achieve the desired power level \code{eta}.

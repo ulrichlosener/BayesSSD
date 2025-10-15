@@ -1,25 +1,25 @@
 #' Perform simulation-based Bayesian sample size determination
 #'
 #' @param eta The desired power level.
+#' @param hypothesis List of the hypotheses to be evaluated. Treatment groups are coded as `a`, `b`, `c`, etc.
+#' @param eff.sizes The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.
+#' @param BFthres The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.
+#' @param PMPthres The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.
+#' @param method The method used for hypothesis evaluation. If `bfc`/`BFc`, then the hypothesis is compared against its complement via the Bayes Factor. If `bf`/`BF`, then the first hypothesis is compared to the second one via the Bayes Factor. If `pmp`/`PMP`, then the first hypothesis is compared to the whole set of hypotheses including the complement via posterior model probabilities.
 #' @param attrition The attrition pattern (`FALSE` for no attrition, otherwise `weibull`, `modified_weibull`, `linear_exponential`, `log_logistic`, `gompertz` or `non-parametric`)
 #' @param params The parameters passed to the survival function specified in `attrition`. First parameter is omega, second gamma and third (if applicable) is kappa.
-#' @param m The number of datasets simulated in each iteration. The higher `m`, the more accurate the power level but the higher the computation time
 #' @param t.points The points in time of measurement. Can be non-equidistant.
 #' @param var.u0 The intercept variance.
 #' @param var.u1 The slope variance.
-#' @param cov The covariance between intercept variance and slope variance.
 #' @param var.e The residual variance.
-#' @param eff.sizes The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.
+#' @param cov The covariance between intercept variance and slope variance.
+#' @param m The number of datasets simulated in each iteration. The higher `m`, the more accurate the power level but the higher the computation time
 #' @param log.grow Logical. Use log-linear growth?
-#' @param BFthres The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.
 #' @param seed Set a seed for reproducibility?
-#' @param hypothesis List of the hypotheses to be evaluated. Treatment groups are coded as `a`, `b`, `c`, etc.
-#' @param PMPthres The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.
 #' @param sensitivity Logical. Conduct a sensitivity analysis for the parameter `fraction`?
 #' @param tol Tolerance for the deviation of the final result from `eta`. Higher values may speed up performance.
 #' @param N.max The maximum sample size to be considered. Lower values may speed up performance.
 #' @param N.min The minimum sample size to be considered. Higher values may speed up performance.
-#' @param method The method used for hypothesis evaluation. If `bfc`/`BFc`, then the hypothesis is compared against its complement via the Bayes Factor. If `bf`/`BF`, then the first hypothesis is compared to the second one via the Bayes Factor. If `pmp`/`PMP`, then the first hypothesis is compared to the whole set of hypotheses including the complement via posterior model probabilities.
 #'
 #' @return Returns the sample size (number of subjects) necessary to achieve the desired power level `eta`.
 #' @export
@@ -31,12 +31,14 @@
 #' hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.001,
 #' N_max=1000)
 
-BayeSSD <- function(eta=.8, attrition="weibull", params=c(.5,1),
-                    m=10000, t.points=c(0,1,2,3,4), var.u0=0.01,
-                    var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .5, .8),
-                    BFthres=5, log.grow=F, seed=NULL,
-                    hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.01,
-                    N.max=1000, N.min=30, method="bfc") {
+BayeSSD <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
+                    BFthres=5, PMPthres=.9, method="bfc",
+                    attrition="weibull", params=c(.5,1),
+                    t.points=c(0,1,2,3,4),
+                    var.u0=0.01, var.u1=.1, var.e=.01, cov=0,
+                    m=10000, log.grow=F, seed=NULL,
+                    sensitivity=F, tol=.01,
+                    N.max=1000, N.min=30) {
 
   # Use calling handlers to catch interrupts
   withCallingHandlers({
