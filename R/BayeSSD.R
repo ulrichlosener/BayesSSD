@@ -16,7 +16,7 @@
 #' @param m The number of datasets simulated in each iteration. The higher `m`, the more accurate the power level but the higher the computation time
 #' @param log.grow Logical. Use log-linear growth?
 #' @param seed Set a seed for reproducibility?
-#' @param sensitivity Logical. Conduct a sensitivity analysis for the parameter `fraction`?
+#' @param sensitivity Logical. Conduct a sensitivity analysis for the b fraction?
 #' @param tol Tolerance for the deviation of the final result from `eta`. Higher values may speed up performance.
 #' @param N.max The maximum sample size to be considered. Lower values may speed up performance.
 #' @param N.min The minimum sample size to be considered. Higher values may speed up performance.
@@ -27,9 +27,9 @@
 #' SSD_longit(eta=.8, attrition="weibull", params=c(.5,1),
 #' m=100, t.points=c(0,1,2,3,4), var.u0=0.01,
 #' var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .8, .8),
-#' BFthres=5, fraction=1, log.grow=F, seed=NULL,
+#' BFthres=5, log.grow=F, seed=NULL,
 #' hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.001,
-#' N_max=1000)
+#' N.max=1000)
 
 SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
                     BFthres=5, PMPthres=.9, method="bfc",
@@ -173,7 +173,10 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
         N_min <- N.min
         N_max <- N.max
         # print info on sensitivity analysis
-        cat("\n", "\n", "Sensitivity analysis for fraction = ", i, "\n")
+        ifelse(i==1,
+               cat("\n", "\n", "Sensitivity analysis for b = p/N_eff", "\n"),
+               cat("\n", "\n", "Sensitivity analysis for b = ( p +", i, ")/N_eff", "\n"))
+
         while(condition == F){
 
           N_mid <- round((N_min + N_max)/2 - .1, digits = 0)  # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number

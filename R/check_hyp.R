@@ -3,7 +3,7 @@
 #' @param hypothesis The research hypothesis of interest, which must be true
 #' @param eff.sizes The vector of true effect sizes
 #'
-#' @returns TRUE or FALSE
+#' @returns TRUE if the hypothesis is true or FALSE if it is not true
 #' @export
 #'
 #' @examples check_hyp("a<b<c", c(0, .5, .8)) # returns TRUE

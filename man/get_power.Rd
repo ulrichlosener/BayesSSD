@@ -7,7 +7,7 @@
 get_power(
   attrition = "weibull",
   params = c(0.5, 1),
-  m = 100,
+  m = 1000,
   N = 100,
   t.points = c(0, 1, 2, 3, 4),
   var.u0 = 0.03,
@@ -63,8 +63,8 @@ Returns the power when using a Bayes Factor and the power when using Posterior M
 Bayesian power calculation with attrition for three treatment conditions
 }
 \examples{
-getpower_mis_mv(attrition="weibull", params=c(.5,1),
-m=100, N=100, t.points=c(0,1,2,3,4), var.u0=0.03,
+get_power(attrition="weibull", params=c(.5,1),
+m=1000, N=100, t.points=c(0,1,2,3,4), var.u0=0.03,
 var.u1=.1, var.e=.02, cov=0, eff.sizes=c(0, .5, .5),
 BFthres=5, fraction=1, log.grow=F, seed=NULL,
 hypothesis="a<b<c", PMPthres=.9)

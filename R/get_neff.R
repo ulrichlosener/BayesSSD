@@ -1,8 +1,6 @@
 #' Calculate the effective sample size in a multilevel model with attrition for multiple treatment groups
 #'
 #' @param model A multilevel model of class 'mermod' (specifically 'lmerMod') with ≥2 treatment conditions
-#' @param N Number of subjects in the model
-#' @param t.points Vector containing the measurement occasions
 #' @param surviv Vector (or list of vectors) containing the proportion of subjects remaining at each timepoint
 #'
 #' @return Returns the effective sample size for each treatment condition's effects

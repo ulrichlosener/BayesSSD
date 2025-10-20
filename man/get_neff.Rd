@@ -10,10 +10,6 @@ get_neff(model, surviv)
 \item{model}{A multilevel model of class 'mermod' (specifically 'lmerMod') with ≥2 treatment conditions}
 
 \item{surviv}{Vector (or list of vectors) containing the proportion of subjects remaining at each timepoint}
-
-\item{N}{Number of subjects in the model}
-
-\item{t.points}{Vector containing the measurement occasions}
 }
 \value{
 Returns the effective sample size for each treatment condition's effects
