@@ -66,13 +66,14 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
     if(!is.null(seed)) {set.seed(seed)}  # set user-specified seed for reproducibility
 
     N <- list()
-    n_cond <- length(eff.sizes) # extract number of conditions
-    candidate_N <- seq(from=N.min, to=N.max, by=n_cond) # set of candidate N (divisible by number of conditions)
+    n_cond <- length(eff.sizes)                         # extract number of conditions
+    candidate_N <- seq(from=ceiling(N.min/n_cond)/n_cond,
+                       to=floor(N.max/n_cond)*n_cond, by=n_cond) # set of candidate N (divisible by number of conditions)
 
-    condition <- FALSE                               # condition initially FALSE until power criterion is reached
-    j <- 1                                           # iteration counter
-    pow <- 0                                         # initialize power
-    av_it <- round(log((N.max - N.min + 1), base=2)) # approximation of average numbers of iterations
+    condition <- FALSE                                        # condition initially FALSE until power criterion is reached
+    j <- 1                                                    # iteration counter
+    pow <- 0                                                  # initialize power
+    av_it <- round(log(((N.max - N.min + 1)/n_cond), base=2)) # approximation of average numbers of iterations
     N_min <- N.min
     N_max <- N.max
 
@@ -80,8 +81,8 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
       ################### without sensitivity analysis #########################
       while(condition == F){
 
-        N_mid <- round((N_min + N_max)/2 - .1, digits = 0)  # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
-        N[[j]] <- candidate_N[which.min(abs(candidate_N - N_mid))]   # find the nearest candidate value for N to N_mid
+        N_mid <- round((N_min + N_max)/2 - .1, digits = 0)         # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
+        N[[j]] <- candidate_N[which.min(abs(candidate_N - N_mid))] # find the nearest candidate value for N to N_mid
 
         # set m according to iteration/difference between actual (pow) and desired power (eta)
         if(m>=5000){
