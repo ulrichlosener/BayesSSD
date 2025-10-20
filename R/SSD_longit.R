@@ -54,15 +54,11 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
     if(m<1000) {message("Results with less than 1000 generated datasets per iteration can be unreliable.")}
     if((method=="bf" | method=="BF") & (length(hypothesis)!=2)) {stop("Method 'bf' requires exactly two hypotheses.")}
 
-    # check if hypothesis is indeed true according to effect sizes
-    if(is.list(hypothesis)){
-      if(!check_hyp(hypothesis=hypothesis[[1]], eff.sizes=eff.sizes)){
-        stop("The research hypothesis (first element of a list of hypotheses) must be true according to specified effect sizes.")
-      }
-    } else {
-      if(!check_hyp(hypothesis=hypothesis, eff.sizes=eff.sizes)){
-        stop("The research hypothesis must be true according to specified effect sizes.")
-      }
+    # extract variable names in order of appearance
+    cond <- unique(unlist(strsplit(gsub("[^[:alnum:]_]", " ", hypothesis), "\\s+")))
+    # check that the number of variables in hypothesis matches length of effect sizes
+    if (length(cond) != length(eff.sizes)) {
+      stop("Number of effect sizes must match number of unique variables in hypothesis.")
     }
 
     start_time <- Sys.time()
