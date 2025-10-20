@@ -24,7 +24,7 @@
 #' @return Returns the sample size (number of subjects) necessary to achieve the desired power level `eta`.
 #' @export
 #' @examples
-#' BayeSSD(eta=.8, attrition="weibull", params=c(.5,1),
+#' SSD_longit(eta=.8, attrition="weibull", params=c(.5,1),
 #' m=100, t.points=c(0,1,2,3,4), var.u0=0.01,
 #' var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .8, .8),
 #' BFthres=5, fraction=1, log.grow=F, seed=NULL,
@@ -53,6 +53,17 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
     if(BFthres<0) {stop("'BFthres' must be positive.")}
     if(m<1000) {message("Results with less than 1000 generated datasets per iteration can be unreliable.")}
     if((method=="bf" | method=="BF") & (length(hypothesis)!=2)) {stop("Method 'bf' requires exactly two hypotheses.")}
+
+    # check if hypothesis is indeed true according to effect sizes
+    if(is.list(hypothesis)){
+      if(!check_hyp(hypothesis=hypothesis[[1]], eff.sizes=eff.sizes)){
+        stop("The research hypothesis (first element of a list of hypotheses) must be true according to specified effect sizes.")
+      }
+    } else {
+      if(!check_hyp(hypothesis=hypothesis, eff.sizes=eff.sizes)){
+        stop("The research hypothesis must be true according to specified effect sizes.")
+      }
+    }
 
     start_time <- Sys.time()
 

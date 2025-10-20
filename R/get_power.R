@@ -102,3 +102,5 @@ get_power <- function(attrition="weibull", params=c(.5,1),
               power_bf=power_bf,
               prop_simplified=prop_simplified))
 }
+
+# END OF FUNCTION --------------------------------------------------------------

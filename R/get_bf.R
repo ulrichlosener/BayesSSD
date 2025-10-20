@@ -194,3 +194,5 @@ get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("
   # return results
   return(result)
 }
+
+# END OF FUNCTION --------------------------------------------------------------
