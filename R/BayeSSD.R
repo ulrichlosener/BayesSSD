@@ -31,7 +31,7 @@
 #' hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.001,
 #' N_max=1000)
 
-BayeSSD <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
+SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
                     BFthres=5, PMPthres=.9, method="bfc",
                     attrition="weibull", params=c(.5,1),
                     t.points=c(0,1,2,3,4),
