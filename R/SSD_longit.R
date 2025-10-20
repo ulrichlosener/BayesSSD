@@ -67,7 +67,7 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
 
     N <- list()
     n_cond <- length(eff.sizes)                         # extract number of conditions
-    candidate_N <- seq(from=ceiling(N.min/n_cond)/n_cond,
+    candidate_N <- seq(from=ceiling(N.min/n_cond)*n_cond,
                        to=floor(N.max/n_cond)*n_cond, by=n_cond) # set of candidate N (divisible by number of conditions)
 
     condition <- FALSE                                        # condition initially FALSE until power criterion is reached
