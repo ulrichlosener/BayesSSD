@@ -32,13 +32,13 @@
 #' N.max=1000)
 
 SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
-                    BFthres=5, PMPthres=.9, method="bfc",
-                    attrition="weibull", params=c(.5,1),
-                    t.points=c(0,1,2,3,4),
-                    var.u0=0.01, var.u1=.1, var.e=.01, cov=0,
-                    m=10000, log.grow=F, seed=NULL,
-                    sensitivity=F, tol=.01,
-                    N.max=1000, N.min=30) {
+                        BFthres=5, PMPthres=.9, method="bfc",
+                        attrition="weibull", params=c(.5,1),
+                        t.points=c(0,1,2,3,4),
+                        var.u0=0.01, var.u1=.1, var.e=.01, cov=0,
+                        m=10000, log.grow=F, seed=NULL,
+                        sensitivity=F, tol=.01,
+                        N.max=1000, N.min=30) {
 
   # Use calling handlers to catch interrupts
   withCallingHandlers({
@@ -169,9 +169,11 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
         N_min <- N.min
         N_max <- N.max
         # print info on sensitivity analysis
-        ifelse(i==1,
-               cat("\n", "\n", "Sensitivity analysis for b = p/N_eff", "\n"),
-               cat("\n", "\n", "Sensitivity analysis for b = ( p +", i, ")/N_eff", "\n"))
+        if(i==1){
+          cat("\n", "\n", "Sensitivity analysis for b = p/N_eff", "\n")
+        } else {
+          cat("\n", "\n", "Sensitivity analysis for b = ( p +", i, ")/N_eff", "\n")
+        }
 
         while(condition == F){
 
