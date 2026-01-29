@@ -1,6 +1,6 @@
 #' Calculate the Bayes Factor and posterior model probabilities
 #'
-#' @param N The number of subjects
+#' @param N The total number of subjects or a vector with group sizes for each condition
 #' @param attrition The attrition pattern (FALSE for no attrition, otherwise "weibull", "modified_weibull", "linear_exponential", "log_logistic", "gompertz" or "non-parametric")
 #' @param params The parameters passed to the survival function specified in "attrition". First parameter is omega, second is gamma.
 #' @param hypothesis The hypothesis to be evaluated. Treatment groups are coded as "a", "b", "c", etc.
@@ -15,11 +15,11 @@
 #' @importFrom bain bain
 #' @export
 #' @return Returns the Bayes Factor or Posterior Model Probabilities for the hypothesis.
-#' @examples getbf_mis_mv(N=100, attrition="weibull", params=list(.8,1), hypothesis=list("a<b<c","a=b=c"), t.points=c(0,1,2))
+#' @examples get_bf(N=100, attrition="weibull", params=list(.8,1), hypothesis=list("a<b<c","a=b=c"), t.points=c(0,1,2))
 
-get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("a<b<c","a=b=c"),
-                                 t.points=c(0,1,2), var.u0=.01, var.u1=.002, cov=0, var.e=.01, eff.sizes=c(0.8, -.45, .-.46),
-                                 fraction=1, log.grow=F){
+get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis="a<b=c",
+                   t.points=c(0,1,2), var.u0=.01, var.u1=.002, cov=0, var.e=.01,
+                   eff.sizes=c(0, .8, .8), fraction=1, log.grow=F){
 
   # determine number of conditions from hypotheses
   cond_letters <- unique(unlist(lapply(hypothesis, function(h) {
@@ -40,38 +40,85 @@ get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("
 
   n <- length(t.points)  # number of measurement occasions
 
-  # create time variable t
-  if(log.grow==F) {
-    t <- rep(t.points, N)
-  } else {
-    if(min(t.points)==0) {
-      t <- rep(log(t.points+1), N)
+  if(length(N)==1){ # in case of equal group sizes -----------------------------
+
+    # create time variable t
+    if(!log.grow) {
+      t <- rep(t.points, N)
     } else {
-      t <- rep(log(t.points), N)
+      if(min(t.points)==0) {
+        t <- rep(log(t.points+1), N)
+      } else {
+        t <- rep(log(t.points), N)
+      }
     }
+
+    t.prop <- t.points/max(t.points) # create rescaled time variable
+    id <- rep(seq_len(N), each=n)  # create ID variable
+    treat <- as.character(gl(n=n_cond, k=n, length=N*n, labels=cond_letters))
+    dat0 <- data.frame(id, treat, t) # template data frame
+    dat0$treat <- factor(dat0$treat, levels = cond_letters) # first letter as reference
+
+    # generate data
+    multinorm <- MASS::mvrnorm(n=N, mu=c(0,0), Sigma=matrix(c(var.u0, cov, cov, var.u1), 2, 2)) # draw random effects
+    treat_coefs <- eff.sizes[-1] * sqrt(var.u1) + eff.sizes[1] * sqrt(var.u1) # cumulative effect sizes
+    treat_dummies <- model.matrix(~ treat - 1, data = dat0)[, -1, drop = FALSE] # create dummies
+
+    components <- list(
+      base = eff.sizes[1] * sqrt(var.u1) * t, # baseline effect for condition "a"
+      u0 = rep(multinorm[, 1], each=n),       # random intercepts
+      u1 = rep(multinorm[, 2], each=n) * t,   # random slopes
+      treatments = rowSums(treat_dummies * (t %*% t(treat_coefs))), # betas for each condition
+      error = rnorm(N * n, 0, sqrt(var.e))    # residual
+    )
+
+  } else if(length(N)==n_cond){ # in case of unequal group sizes ---------------
+
+    N_tot <- sum(N) # total sample size
+
+    # ----- condition variable -----
+    treat <- factor(
+      rep(cond_letters, times = N * n),
+      levels = cond_letters
+    )
+
+    # ----- ID variable -----
+    id <- rep(seq_len(N_tot), each = n)
+
+    # ----- time variable -----
+    if (!log.grow) {
+      t <- rep(t.points, times = N_tot)
+    } else {
+      if (min(t.points) == 0) {
+        t <- rep(log(t.points + 1), times = N_tot)
+      } else {
+        t <- rep(log(t.points), times = N_tot)
+      }
+    }
+
+    # template data frame
+    dat0 <- data.frame(id = id, treat = treat, t = t)
+
+    # generate data
+    multinorm <- MASS::mvrnorm(n=N_tot, mu=c(0, 0), Sigma=matrix(c(var.u0, cov, cov, var.u1), 2, 2))
+    treat_coefs <- eff.sizes[-1] * sqrt(var.u1) + eff.sizes[1] * sqrt(var.u1)
+    treat_dummies <- model.matrix(~treat - 1, data = dat0)[, -1, drop = FALSE]
+
+    components <- list(
+      base = eff.sizes[1] * sqrt(var.u1) * t,
+      u0 = rep(multinorm[, 1], each=n),
+      u1 = rep(multinorm[, 2], each=n) * t,
+      treatments = rowSums(treat_dummies * (t %*% t(treat_coefs))),
+      error = rnorm(N_tot * n, 0, sqrt(var.e))
+    )
+
+  } else { # in case the number of sample sizes is not 1 or equal to the number of conditions
+    stop("Number of group sizes (N) must be equal to one or the number of conditions.")
   }
 
-  t.prop <- t.points/max(t.points) # create rescaled time variable
-  id <- rep(seq_len(N), each=n)  # create ID variable
-  treat <- as.character(gl(n=n_cond, k=n, length=N*n, labels=cond_letters))
-  dat0 <- data.frame(id, treat, t) # template data frame
-  dat0$treat <- factor(dat0$treat, levels = cond_letters) # first letter as reference
+  y <- Reduce(`+`, components) # add everything together for outcome y
 
-  # generate data
-  multinorm <- MASS::mvrnorm(n=N, mu=c(0,0), Sigma=matrix(c(var.u0, cov, cov, var.u1), 2, 2)) # draw random effects
-  treat_coefs <- eff.sizes[-1] * sqrt(var.u1) + eff.sizes[1] * sqrt(var.u1) # cumulative effect sizes
-  treat_dummies <- model.matrix(~ treat - 1, data = dat0)[, -1, drop = FALSE] # create dummies
-
-  components <- list(
-    base = eff.sizes[1] * sqrt(var.u1) * t, # baseline effect for condition "a"
-    u0 = rep(multinorm[, 1], each=n),       # random intercepts
-    u1 = rep(multinorm[, 2], each=n) * t,   # random slopes
-    treatments = rowSums(treat_dummies * t %*% t(treat_coefs)), # betas for each condition
-    error = rnorm(N * n, 0, sqrt(var.e))    # residual
-  )
-
-  y <- Reduce(`+`, components) # add everything together
-
+  # Attrition ------------------------------------------------------------------
   # compute survival curves
   if(!identical(attrition, FALSE)){ # with attrition
     surviv <- survival(distributions=attrition, params=params, t.points=t.points)
@@ -92,40 +139,41 @@ get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("
   }
 
   # introduce attrition to the simulated data
-    dat <- data.frame(dat0, y, hazard = unsplit(hazard, f = dat0$treat))
+  dat <- data.frame(dat0, y, hazard = unsplit(hazard, f = dat0$treat))
 
-    # extract subject ids
-    ids <- unique(dat$id)
+  # extract subject ids
+  ids <- unique(dat$id)
 
-    # for each subject, find the first dropout time (if any)
-    first_dropout <- tapply(
-      1:nrow(dat),
-      dat$id,
-      function(idx) {
-        hazards <- dat$hazard[idx]
-        # Generate dropout decisions for all timepoints at once
-        dropout <- rbinom(n-1, 1, hazards[-n])
-        # Find the first dropout (returns NA if no dropout)
-        which(dropout == 1)[1] + 1  # +1 because hazard[t] affects t+1
-      },
-      simplify = FALSE
-    )
+  # for each subject, find the first dropout time (if any)
+  first_dropout <- tapply(
+    1:nrow(dat),
+    dat$id,
+    function(idx) {
+      hazards <- dat$hazard[idx]
+      # Generate dropout decisions for all timepoints at once
+      dropout <- rbinom(n-1, 1, hazards[-n])
+      # Find the first dropout (returns NA if no dropout)
+      which(dropout == 1)[1] + 1  # +1 because hazard[t] affects t+1
+    },
+    simplify = FALSE
+  )
 
-    # mark missing values and consecutive timepoints
-    dat$mis <- 0
-    dropout_indices <- unlist(
-      lapply(ids, function(id) {
-        fd <- first_dropout[[as.character(id)]]
-        if (!is.na(fd)) {
-          idx <- which(dat$id == id)
-          seq(idx[fd], max(idx), by = 1)
-        }
-      })
-    ) # remove marked y-values
-    dat$mis[dropout_indices] <- 1
-    dat$y[dat$mis == 1] <- NA
+  # mark missing values and consecutive timepoints
+  dat$mis <- 0
+  dropout_indices <- unlist(
+    lapply(ids, function(id) {
+      fd <- first_dropout[[as.character(id)]]
+      if (!is.na(fd)) {
+        idx <- which(dat$id == id)
+        seq(idx[fd], max(idx), by = 1)
+      }
+    })
+  ) # remove marked y-values
+  dat$mis[dropout_indices] <- 1
+  dat$y[dat$mis == 1] <- NA
 
-    simplified <- FALSE # initialize indicator variable for simplified models
+  # Fit MLM --------------------------------------------------------------------
+  simplified <- FALSE # initialize indicator variable for simplified models
 
   # in case of identifiability issues due to high attrition, simplify the model (constrain random effects to be independent)
   model <- tryCatch({
@@ -159,6 +207,7 @@ get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("
   # Extract variances using the same indices as for the estimates
   Sigma <- lapply(est_indices, function(i) as.matrix(vcov(model)[i,i]))
 
+  # Hypothesis testing ---------------------------------------------------------
   # calculate N_eff
   n_eff <- get_neff(model=model, surviv=surviv)
 
@@ -169,7 +218,7 @@ get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis=list("
   # perform Bayesian hypothesis evaluation using bain package
   result <- tryCatch({
     bf_res <- bain::bain(x=est, Sigma=Sigma, n=n_eff, fraction=fraction,
-                       hypothesis=hyp, group_parameters = 1, joint_parameters = 0)
+                         hypothesis=hyp, group_parameters = 1, joint_parameters = 0)
     # extract the BF and PMPs, if there are exactly two hypotheses, extract the BF of H1 versus H2
     if(n_hyp == 2){
       list(bf_c = bf_res[["fit"]][["BF.c"]][1],
