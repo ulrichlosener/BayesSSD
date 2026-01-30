@@ -20,7 +20,7 @@ library(BayesSSD)                                                    # load Baye
 
 You can cite this R-package with the following citation:
 
- Lösener, U. (2025). BayesSSD: Bayesian Sample Size Determination for Longitudinal Experiments with Attrition. (Version 0.1.0), R package.
+ Lösener, U. (2025). BayesSSD: Bayesian Sample Size Determination for Longitudinal Experiments with Attrition. (Version 0.2.0), R package.
 
 
 ## Contributing and Contact Information
