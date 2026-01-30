@@ -38,7 +38,7 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
                         var.u0=0.01, var.u1=.1, var.e=.01, cov=0,
                         m=10000, log.grow=F, seed=NULL,
                         sensitivity=F, tol=.01,
-                        N.max=1000, N.min=30, group_ratio = NULL) {
+                        N.max=1000, N.min=30, group_sizes = NULL) {
 
   # Use calling handlers to catch interrupts
   withCallingHandlers({
@@ -53,9 +53,9 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
     if(BFthres<0) {stop("'BFthres' must be positive.")}
     if(m<1000) {message("Results with less than m=1000 generated datasets per iteration can be unreliable.")}
     if((method=="bf" | method=="BF") & (length(hypothesis)!=2)) {stop("Method 'bf' requires exactly two hypotheses.")}
-    if (!is.null(group_ratio)) {
-      if (length(group_ratio) != length(eff.sizes)) {stop("Length of 'group_ratio' must match number of conditions.")}
-      if (any(group_ratio <= 0)) {stop("'group_ratio' must contain only positive values.")}
+    if (!is.null(group_sizes)) {
+      if (length(group_sizes) != length(eff.sizes)) {stop("Length of 'group_sizes' must match number of conditions.")}
+      if (any(group_sizes <= 0)) {stop("'group_sizes' must contain only positive values.")}
     }
 
     # extract variable names in order of appearance
@@ -68,7 +68,7 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
     if(!is.null(seed)) {set.seed(seed)}  # set user-specified seed for reproducibility
 
     N <- list()
-    group_ratio <- group_ratio / sum(group_ratio)            # set group_ratio to correct scale if necessary
+    group_sizes <- group_sizes / sum(group_sizes)            # set group_sizes to correct scale if necessary
     n_cond <- length(eff.sizes)                              # extract number of conditions
 
     candidate_N <- seq(from = N.min,
@@ -76,6 +76,7 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
                        by   = 1)
 
     condition <- FALSE                                        # condition initially FALSE until power criterion is reached
+    stuck <- FALSE                                            # indicator if algorithm is stuck on repeated sample size
     j <- 1                                                    # iteration counter
     pow <- 0                                                  # initialize power
     av_it <- round(log(((N.max - N.min + 1)/n_cond), base=2)) # approximation of average numbers of iterations
@@ -91,10 +92,10 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
         N_mid <- round((N_min + N_max)/2 - .1, digits = 0)         # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
         N_tot <- candidate_N[which.min(abs(candidate_N - N_mid))]
 
-        if (is.null(group_ratio)) { # balanced design
+        if (is.null(group_sizes)) { # balanced design
           N[[j]] <- N_tot
         } else { # unbalanced design via ratios
-          N_raw <- N_tot * group_ratio
+          N_raw <- N_tot * group_sizes
           N[[j]] <- floor(N_raw)
         }
 
@@ -116,7 +117,7 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
                              cov=cov, var.e=var.e, eff.sizes=eff.sizes,
                              BFthres=BFthres, PMPthres=PMPthres, hypothesis=hypothesis)
 
-        # check if condition is met
+        # check if power is larger or smaller than desired power
         if(method == "bfc" | method == "BFc" | method == "bf_c" | method == "BF_c"){
           if(results$power_bfc >= eta){
             N_max <- sum(N[[j]]) - 1
@@ -146,7 +147,7 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
         remaining_time <- avg_time_per_iter * (av_it - j)
 
         # Print progress
-        if(is.null(group_ratio)){
+        if(is.null(group_sizes)){
           cat(
             sprintf("Iteration %d: N = %d | Power = %.3f | Elapsed: %.1f minutes | Remaining: ~ %.1f minutes \n",
                     j, unlist(N[[j]]), pow, elapsed, remaining_time)
@@ -171,16 +172,22 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
           )
         }
 
+        # if the current N is evaluated twice, condition is met
+        if(length(N) > 2){
+          if(sum(N[[j-1]]) == sum(N[[j-2]])){
+            stuck <- TRUE
+          }
+        }
         # if power level is close enough to desired power level, condition is met and the algorithm stops
-        if (round(abs(pow - eta), 8) <= tol) {
+        if (round(abs(pow - eta), 8) <= tol | isTRUE(stuck)) {
           condition <- TRUE
           total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
-          if(is.null(group_ratio)){
+          if(is.null(group_sizes)){ # output for equal group sizes
             cat(
               sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f) \n",
                       j, total_time, unlist(N[[j]]), pow)
             )
-          } else{
+          } else{ # output for unequal group sizes
             cat(
               sprintf("\nConverged in %d iterations (%.1f minutes). Final N_total = %d | N_g = (%s) | Power = %.3f \n",
                       j, total_time, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow)
@@ -197,6 +204,7 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
         # Re-initialize
         N <- list()
         condition <- FALSE    # condition initially FALSE until power criterion is reached
+        stuck <- FALSE        # repeated sample size from previous iteration?
         j <- 1                # iteration counter
         pow <- 0              # initialize power
         av_it <- round(log((N.max - N.min + 1), base=2)) # approximation of average numbers of iterations
@@ -214,10 +222,10 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
           N_mid <- round((N_min + N_max)/2 - .1, digits = 0)         # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
           N_tot <- candidate_N[which.min(abs(candidate_N - N_mid))]
 
-          if (is.null(group_ratio)) { # balanced design
+          if (is.null(group_sizes)) { # balanced design
             N[[j]] <- N_tot
           } else { # unbalanced design via ratios
-            N_raw <- N_tot * group_ratio
+            N_raw <- N_tot * group_sizes
             N[[j]] <- floor(N_raw)
           }
 
@@ -239,23 +247,23 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
                                cov=cov, var.e=var.e, eff.sizes=eff.sizes,
                                BFthres=BFthres, PMPthres=PMPthres, hypothesis=hypothesis)
 
-          # check if condition is met
-          if(method=="bfc" | method=="BFc" | method=="bf_c" | method=="BF_c"){
-            if(results$power_bfc>=eta){
+          # check if power is larger or smaller than desired power
+          if(method == "bfc" | method == "BFc" | method == "bf_c" | method == "BF_c"){
+            if(results$power_bfc >= eta){
               N_max <- sum(N[[j]]) - 1
             } else {
               N_min <- sum(N[[j]]) + 1
             }
             pow <- results$power_bfc
-          } else if(method=="pmp" | method=="PMP"){
-            if(results$power_pmp>=eta){
+          } else if(method == "pmp" | method == "PMP"){
+            if(results$power_pmp >= eta){
               N_max <- sum(N[[j]]) - 1
             } else {
               N_min <- sum(N[[j]]) + 1
             }
             pow <- results$power_pmp
-          } else if(method=="bf" | method=="BF"){
-            if(results$power_bf>=eta){
+          } else if(method == "bf" | method == "BF"){
+            if(results$power_bf >= eta){
               N_max <- sum(N[[j]]) - 1
             } else{
               N_min <- sum(N[[j]]) + 1
@@ -269,7 +277,7 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
           remaining_time <- avg_time_per_iter * (av_it - j)
 
           # Print progress
-          if(is.null(group_ratio)){
+          if(is.null(group_sizes)){
              cat(
               sprintf("Iteration %d: N = %d | Power = %.3f | Elapsed: %.1f minutes | Total remaining: ~ %.1f minutes \n",
                       j, unlist(N[[j]]), pow, elapsed, remaining_time)
@@ -294,16 +302,23 @@ SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
             )
           }
 
+          # if the current N is evaluated twice, condition is met
+          if(length(N) > 2){
+            if(sum(N[[j-1]]) == sum(N[[j-2]])){
+              stuck <- TRUE
+            }
+          }
+
           # if power level is close enough to desired power level, condition is met and the algorithm stops
-          if (round(abs(pow - eta), 8) <= tol) {
+          if(round(abs(pow - eta), 8) <= tol | isTRUE(stuck)) {
             condition <- TRUE
             total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
-            if(is.null(group_ratio)){
+            if(is.null(group_sizes)){ # output for equal group sizes
               cat(
                 sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f) \n",
                         j, total_time, unlist(N[[j]]), pow)
               )
-            } else{
+            } else{ # output for unequal group sizes
               cat(
                 sprintf("\nConverged in %d iterations (%.1f minutes). Final N_total = %d | N_g = (%s) | Power = %.3f \n",
                         j, total_time, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow)
