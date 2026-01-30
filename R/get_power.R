@@ -3,7 +3,7 @@
 #' @param attrition The attrition pattern (FALSE for no attrition, otherwise "weibull", "modified_weibull", "linear_exponential", "log_logistic", "gompertz" or "non-parametric")
 #' @param params The parameters passed to the survival function specified in "attrition". First parameter is omega, second is gamma.
 #' @param m The number of datasets simulated. The higher m, the more accurate the power level but the higher the computation cost
-#' @param N The number of subjects
+#' @param N The total number of subjects or a vector with group sizes for each condition
 #' @param t.points The points in time of measurement. Can be non-equidistant.
 #' @param var.u0 The intercept variance.
 #' @param var.u1 The slope variance.
@@ -45,7 +45,7 @@ get_power <- function(attrition="weibull", params=c(.5,1),
 
   future::plan(future::multisession, workers = future::availableCores() - 1)  # Use all but one core
 
-  Ns <- rep(N, m)  # object to use lapply on with first argument for the function (N)
+  Ns <- replicate(m, N, simplify = FALSE)  # object to use lapply on with first argument for the function (N)
 
   # Run simulation m times
     bfs <- future.apply::future_lapply(
