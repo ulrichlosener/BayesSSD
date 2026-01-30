@@ -1,6 +1,6 @@
 Package: BayesSSD
 Title: Bayesian sample size determination for longitudinal experiments
-Version: 0.3.0
+Version: 0.2.0
 Authors@R: 
     person("Ulrich", "Lösener", , "u.c.losener1@uu.nl", role = c("aut", "cre"))
 Description: This package performs simulation-based Bayesian sample size determination for longitudinal experiments.
