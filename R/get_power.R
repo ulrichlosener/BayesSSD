@@ -29,11 +29,23 @@
 #' hypothesis="a<b<c", PMPthres=.9)
 
 
-get_power <- function(attrition="weibull", params=c(.5,1),
-                            m=1000, N=100, t.points=c(0,1,2,3,4), var.u0=0.03,
-                            var.u1=.1, var.e=.02, cov=0, eff.sizes=c(0, .5, .8),
-                            fraction=1, log.grow=F, seed=NULL,
-                            hypothesis="a<b<c", PMPthres=.9, BFthres=5){
+get_power <- function(N=100,
+                      hypothesis="a<b<c",
+                      eff.sizes=c(0, .5, .8),
+                      t.points=c(0,1,2,3,4),
+                      m=1000,
+                      BFthres=5,
+                      PMPthres=.9,
+                      attrition="weibull",
+                      params=c(.5,1),
+                      var.u0=0.03,
+                      var.u1=.1,
+                      var.e=.02,
+                      cov=0,
+                      fraction=1,
+                      log.grow=F,
+                      seed=NULL
+                      ){
 
   if(!is.null(seed)) {set.seed(seed)} # set user-specified seed for reproducibility
 

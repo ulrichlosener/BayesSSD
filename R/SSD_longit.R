@@ -20,25 +20,39 @@
 #' @param tol Tolerance for the deviation of the final result from `eta`. Higher values may speed up performance.
 #' @param N.max The maximum sample size to be considered. Lower values may speed up performance.
 #' @param N.min The minimum sample size to be considered. Higher values may speed up performance.
+#' @param group_sizes If group sizes are unequal, vector of proportions of group sizes for each condition. NULL if balanced design is to be used.
 #'
 #' @return Returns the sample size (number of subjects) necessary to achieve the desired power level `eta`.
 #' @export
 #' @examples
 #' SSD_longit(eta=.8, attrition="weibull", params=c(.5,1),
 #' m=100, t.points=c(0,1,2,3,4), var.u0=0.01,
-#' var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .8, .8),
+#' var.u1=.1, var.e=.01, cov=0, eff.sizes=c(0, .5, .8),
 #' BFthres=5, log.grow=F, seed=NULL,
 #' hypothesis="a<b<c", PMPthres=.9, sensitivity=F, tol=.001,
 #' N.max=1000)
 
-SSD_longit <- function(eta=.8, hypothesis="a<b<c", eff.sizes=c(0, .5, .8),
-                        BFthres=5, PMPthres=.9, method="bfc",
-                        attrition="weibull", params=c(.5,1),
-                        t.points=c(0,1,2,3,4),
-                        var.u0=0.01, var.u1=.1, var.e=.01, cov=0,
-                        m=10000, log.grow=F, seed=NULL,
-                        sensitivity=F, tol=.01,
-                        N.max=1000, N.min=30, group_sizes = NULL) {
+SSD_longit <- function(eta=.8,
+                       hypothesis="a<b<c",
+                       eff.sizes=c(0, .5, .8),
+                       t.points=c(0,1,2,3,4),
+                       m=10000,
+                       BFthres=5,
+                       PMPthres=.9,
+                       method="bfc",
+                       attrition="weibull",
+                       params=c(.5,1),
+                       var.u0=0.03,
+                       var.u1=.1,
+                       var.e=.02,
+                       cov=0,
+                       log.grow=F,
+                       seed=NULL,
+                       sensitivity=F,
+                       tol=.01,
+                       N.max=1000,
+                       N.min=30,
+                       group_sizes=NULL) {
 
   # Use calling handlers to catch interrupts
   withCallingHandlers({

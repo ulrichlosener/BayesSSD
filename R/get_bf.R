@@ -17,9 +17,18 @@
 #' @return Returns the Bayes Factor or Posterior Model Probabilities for the hypothesis.
 #' @examples get_bf(N=100, attrition="weibull", params=list(.8,1), hypothesis=list("a<b<c","a=b=c"), t.points=c(0,1,2))
 
-get_bf <- function(N=100, attrition="weibull", params=c(.8,1), hypothesis="a<b=c",
-                   t.points=c(0,1,2), var.u0=.01, var.u1=.002, cov=0, var.e=.01,
-                   eff.sizes=c(0, .8, .8), fraction=1, log.grow=F){
+get_bf <- function(N=100,
+                   hypothesis="a<b<c",
+                   eff.sizes=c(0, .5, .8),
+                   t.points=c(0,1,2,3,4),
+                   attrition="weibull",
+                   params=c(.8,1),
+                   var.u0=.01,
+                   var.u1=.002,
+                   var.e=.01,
+                   cov=0,
+                   fraction=1,
+                   log.grow=F){
 
   # determine number of conditions from hypotheses
   cond_letters <- unique(unlist(lapply(hypothesis, function(h) {
