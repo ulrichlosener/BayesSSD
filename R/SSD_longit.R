@@ -251,7 +251,7 @@ SSD_longit <- function(eta=.8,
               current_m <- m
             }
           } else {
-            currnet_m <- m
+            current_m <- m
           }
 
           # generate data and store BFs
