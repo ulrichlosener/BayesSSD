@@ -20,7 +20,7 @@
 #' @param tol Tolerance for the deviation of the final result from `eta`. Higher values may speed up performance.
 #' @param N.max The maximum sample size to be considered. Lower values may speed up performance.
 #' @param N.min The minimum sample size to be considered. Higher values may speed up performance.
-#' @param group_sizes If group sizes are unequal, vector of proportions of group sizes for each condition. NULL if balanced design is to be used.
+#' @param group.sizes If group sizes are unequal, vector of proportions of group sizes for each condition. NULL if balanced design is to be used.
 #'
 #' @return Returns the sample size (number of subjects) necessary to achieve the desired power level `eta`.
 #' @export
@@ -42,9 +42,9 @@ SSD_longit <- function(eta=.8,
                        method="bfc",
                        attrition="weibull",
                        params=c(.5,1),
-                       var.u0=0.03,
+                       var.u0=0.033,
                        var.u1=.1,
-                       var.e=.02,
+                       var.e=.026,
                        cov=0,
                        log.grow=F,
                        seed=NULL,
@@ -52,7 +52,7 @@ SSD_longit <- function(eta=.8,
                        tol=.01,
                        N.max=1000,
                        N.min=30,
-                       group_sizes=NULL) {
+                       group.sizes=NULL) {
 
   # Use calling handlers to catch interrupts
   withCallingHandlers({
@@ -67,9 +67,9 @@ SSD_longit <- function(eta=.8,
     if(BFthres<0) {stop("'BFthres' must be positive.")}
     if(m<1000) {message("Results with less than m=1000 generated datasets per iteration can be unreliable.")}
     if((method=="bf" | method=="BF") & (length(hypothesis)!=2)) {stop("Method 'bf' requires exactly two hypotheses.")}
-    if (!is.null(group_sizes)) {
-      if (length(group_sizes) != length(eff.sizes)) {stop("Length of 'group_sizes' must match number of conditions.")}
-      if (any(group_sizes <= 0)) {stop("'group_sizes' must contain only positive values.")}
+    if (!is.null(group.sizes)) {
+      if (length(group.sizes) != length(eff.sizes)) {stop("Length of 'group.sizes' must match number of conditions.")}
+      if (any(group.sizes <= 0)) {stop("'group.sizes' must contain only positive values.")}
     }
 
     # extract variable names in order of appearance
@@ -82,7 +82,7 @@ SSD_longit <- function(eta=.8,
     if(!is.null(seed)) {set.seed(seed)}  # set user-specified seed for reproducibility
 
     N <- list()
-    group_sizes <- group_sizes / sum(group_sizes)            # set group_sizes to correct scale if necessary
+    group.sizes <- group.sizes / sum(group.sizes)            # set group.sizes to correct scale if necessary
     n_cond <- length(eff.sizes)                              # extract number of conditions
 
     candidate_N <- seq(from = N.min,
@@ -106,10 +106,10 @@ SSD_longit <- function(eta=.8,
         N_mid <- round((N_min + N_max)/2 - .1, digits = 0)         # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
         N_tot <- candidate_N[which.min(abs(candidate_N - N_mid))]
 
-        if (is.null(group_sizes)) { # balanced design
+        if (is.null(group.sizes)) { # balanced design
           N[[j]] <- N_tot
         } else { # unbalanced design via ratios
-          N_raw <- N_tot * group_sizes
+          N_raw <- N_tot * group.sizes
           N[[j]] <- floor(N_raw)
         }
 
@@ -161,7 +161,7 @@ SSD_longit <- function(eta=.8,
         remaining_time <- avg_time_per_iter * (av_it - j)
 
         # Print progress
-        if(is.null(group_sizes)){
+        if(is.null(group.sizes)){
           cat(
             sprintf("Iteration %d: N = %d | Power = %.3f | Elapsed: %.1f minutes | Remaining: ~ %.1f minutes \n",
                     j, unlist(N[[j]]), pow, elapsed, remaining_time)
@@ -196,7 +196,7 @@ SSD_longit <- function(eta=.8,
         if (round(abs(pow - eta), 8) <= tol | isTRUE(stuck)) {
           condition <- TRUE
           total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
-          if(is.null(group_sizes)){ # output for equal group sizes
+          if(is.null(group.sizes)){ # output for equal group sizes
             cat(
               sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f) \n",
                       j, total_time, unlist(N[[j]]), pow)
@@ -236,10 +236,10 @@ SSD_longit <- function(eta=.8,
           N_mid <- round((N_min + N_max)/2 - .1, digits = 0)         # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
           N_tot <- candidate_N[which.min(abs(candidate_N - N_mid))]
 
-          if (is.null(group_sizes)) { # balanced design
+          if (is.null(group.sizes)) { # balanced design
             N[[j]] <- N_tot
           } else { # unbalanced design via ratios
-            N_raw <- N_tot * group_sizes
+            N_raw <- N_tot * group.sizes
             N[[j]] <- floor(N_raw)
           }
 
@@ -291,7 +291,7 @@ SSD_longit <- function(eta=.8,
           remaining_time <- avg_time_per_iter * (av_it - j)
 
           # Print progress
-          if(is.null(group_sizes)){
+          if(is.null(group.sizes)){
              cat(
               sprintf("Iteration %d: N = %d | Power = %.3f | Elapsed: %.1f minutes | Total remaining: ~ %.1f minutes \n",
                       j, unlist(N[[j]]), pow, elapsed, remaining_time)
@@ -327,7 +327,7 @@ SSD_longit <- function(eta=.8,
           if(round(abs(pow - eta), 8) <= tol | isTRUE(stuck)) {
             condition <- TRUE
             total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
-            if(is.null(group_sizes)){ # output for equal group sizes
+            if(is.null(group.sizes)){ # output for equal group sizes
               cat(
                 sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f) \n",
                         j, total_time, unlist(N[[j]]), pow)
