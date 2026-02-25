@@ -1,9 +1,12 @@
 # BayesSSD
 
-This is the repository for the R package `BayesSSD`, which was created using R version 4.5.1. The function `SSD_longit` performs simulation-based Bayesian sample size determination for longitudinal experiments. Various patterns of attrition (drop out) can be taken into account by means of a number of parametric and non-parametric survival functions. 
+This is the repository for the R package `BayesSSD`, which was created using R version 4.5.1. The `BayesSSD` package performs simulation-based Bayesian sample size determination for multilevel models. The authors are Ulrich Lösener and Camila Barragán Ibáñez at Utrecht University.
+
+The function `SSD_longit` performs simulation-based Bayesian sample size determination for longitudinal experiments. Various patterns of attrition (drop-out) can be taken into account by means of a number of parametric and non-parametric survival functions. 
+
 You can download the package from GitHub via `devtools::install_github("ulrichlosener/BayesSSD")`.
 
-The accompanying paper for the `BayesSSD` package authored by Ulrich Lösener and Mirjam Moerbeek is called "Bayesian Sample Size Determination for Longitudinal Trials with Attrition - the BayesSSD Package" and has been submitted to *Advances in Methods and Practices in Psychological Science*.
+One accompanying paper for the `BayesSSD` package authored by Ulrich Lösener and Mirjam Moerbeek is called "Bayesian Sample Size Determination for Longitudinal Trials with Attrition - the BayesSSD Package" and is currently under review at *Advances in Methods and Practices in Psychological Science*.
 
 ## Installation
 To install the latest release version of `BayesSSD` from GitHub follow these steps:
@@ -20,8 +23,7 @@ library(BayesSSD)                                                    # load Baye
 
 You can cite this R-package with the following citation:
 
- Lösener, U. (2025). BayesSSD: Bayesian Sample Size Determination for Longitudinal Experiments with Attrition. (Version 0.2.0), R package.
-
+ Lösener, U. , Barragan I., C. N. (2025). BayesSSD: Bayesian Sample Size Determination for Multilevel Models. (Version 0.2.0), R package.
 
 ## Contributing and Contact Information
 
