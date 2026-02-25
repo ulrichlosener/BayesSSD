@@ -1,9 +1,9 @@
 Package: BayesSSD
-Title: Bayesian sample size determination for longitudinal experiments
+Title: Bayesian sample size determination for multilevel models
 Version: 0.2.0
 Authors@R: 
     person("Ulrich", "Lösener", , "u.c.losener1@uu.nl", role = c("aut", "cre"))
-Description: This package performs simulation-based Bayesian sample size determination for longitudinal experiments.
+Description: This package performs simulation-based Bayesian sample size determination (SSD) for multilevel models. For longitudinal SSD, use the function `SSD_longit`. In the longitudinal case, anticipated participant attrition can be taken into account.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
