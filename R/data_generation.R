@@ -9,7 +9,7 @@
 #'@param var_u0 Numeric. Between-cluster variance. Variance at the cluster level.
 #'@param var_e Numeric. Within-cluster variance.
 #'@param mean_interv Numeric. Equivalent to the effect size.
-#'@param bacth_size This parameter determines the size of batches used during the fitting of the multilevel model.
+#'@param batch_size This parameter determines the size of batches used during the fitting of the multilevel model.
 #'@export
 
 
