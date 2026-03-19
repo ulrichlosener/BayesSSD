@@ -5,34 +5,42 @@
 \title{Bayesian power calculation with attrition for three treatment conditions}
 \usage{
 get_power(
+  N = 100,
+  hypothesis = "a<b<c",
+  eff.sizes = c(0, 0.5, 0.8),
+  t.points = c(0, 1, 2, 3, 4),
+  m = 1000,
+  BFthres = 5,
+  PMPthres = 0.9,
   attrition = "weibull",
   params = c(0.5, 1),
-  m = 1000,
-  N = 100,
-  t.points = c(0, 1, 2, 3, 4),
-  var.u0 = 0.03,
+  var.u0 = 0.033,
   var.u1 = 0.1,
-  var.e = 0.02,
+  var.e = 0.026,
   cov = 0,
-  eff.sizes = c(0, 0.5, 0.8),
   fraction = 1,
   log.grow = F,
-  seed = NULL,
-  hypothesis = "a<b<c",
-  PMPthres = 0.9,
-  BFthres = 5
+  seed = NULL
 )
 }
 \arguments{
-\item{attrition}{The attrition pattern (FALSE for no attrition, otherwise "weibull", "modified_weibull", "linear_exponential", "log_logistic", "gompertz" or "non-parametric")}
+\item{N}{The total number of subjects or a vector with group sizes for each condition}
 
-\item{params}{The parameters passed to the survival function specified in "attrition". First parameter is omega, second is gamma.}
+\item{hypothesis}{The hypothesis to be evaluated. Treatment groups are coded as "a", "b", "c", etc.}
+
+\item{eff.sizes}{The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.}
+
+\item{t.points}{The points in time of measurement. Can be non-equidistant.}
 
 \item{m}{The number of datasets simulated. The higher m, the more accurate the power level but the higher the computation cost}
 
-\item{N}{The number of subjects}
+\item{BFthres}{The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.}
 
-\item{t.points}{The points in time of measurement. Can be non-equidistant.}
+\item{PMPthres}{The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.}
+
+\item{attrition}{The attrition pattern (FALSE for no attrition, otherwise "weibull", "modified_weibull", "linear_exponential", "log_logistic", "gompertz" or "non-parametric")}
+
+\item{params}{The parameters passed to the survival function specified in "attrition". First parameter is omega, second is gamma.}
 
 \item{var.u0}{The intercept variance.}
 
@@ -42,19 +50,11 @@ get_power(
 
 \item{cov}{The covariance between intercept variance and slope variance.}
 
-\item{eff.sizes}{The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.}
-
 \item{fraction}{The fraction of information used to construct the prior for the Bayes Factor.}
 
 \item{log.grow}{Use log-linear growth?}
 
 \item{seed}{Set a seed for reproducibility}
-
-\item{hypothesis}{The hypothesis to be evaluated. Treatment groups are coded as "a", "b", "c", etc.}
-
-\item{PMPthres}{The Threshold a Posterior Model Probability needs to exceed in order to be considered convincing evidence.}
-
-\item{BFthres}{The Threshold a Bayes Factor needs to exceed in order to be considered convincing evidence.}
 }
 \value{
 Returns the power when using a Bayes Factor and the power when using Posterior Model Probabilities.

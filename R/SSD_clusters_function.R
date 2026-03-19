@@ -1,20 +1,21 @@
 ########### Sample Size Determination for Cluster Randomized Trials ############
 
 #'@title Sample Size Determination for Cluster Randomized Trials
-#'@description
-#'@arguments
-#  eff_size: Numeric. Effect size
-#  n1: Numeric. Cluster size
-#  n2: Numeric. Total number of clusters
-#  ndatasets: Numeric. Number of data sets that the user wants to generate to determine the sample size.
-#  rho: Numeric. Intraclass correlation
-#  BF_thresh: Numeric. Value of the Bayes factor that is going to be the threshold.
-#  eta: Numeric. Probability of exceeding Bayes Factor threshold.
-#  fixed: Character. Indicating which sample is fixed (n1 or n2)
-#  b_fract: Numeric. Fraction of information used to specify the prior distribution.
-#  max: Maximum sample size.
-#  bacth_size: This parameter determines the size of batches used during the fitting of the multilevel model.
-
+#'@description SSD for CRT
+#'@param eff_size Numeric. Effect size
+#'@param n1 Numeric. Cluster size
+#'@param n2 Numeric. Total number of clusters
+#'@param ndatasets Numeric. Number of data sets that the user wants to generate to determine the sample size.
+#'@param rho Numeric. Intraclass correlation
+#'@param BF_thresh Numeric. Value of the Bayes factor that is going to be the threshold.
+#'@param eta Numeric. Probability of exceeding Bayes Factor threshold.
+#'@param fixed Character. Indicating which sample is fixed (n1 or n2)
+#'@param b_fract Numeric. Fraction of information used to specify the prior distribution.
+#'@param max Maximum sample size.
+#'@param batch_size This parameter determines the size of batches used during the fitting of the multilevel model.
+#' @export
+#' @return Returns the result of the SSD procedure for CRT
+#' @examples SSD_crt_null(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh1, BF_thresh0, eta1 = 0.8, eta0 = 0.8, fixed = "n2", b_fract = 3, max = 1000, batch_size = 100)
 
 SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh1,
                          BF_thresh0, eta1 = 0.8, eta0 = 0.8, fixed = "n2", b_fract = 3,
@@ -24,8 +25,8 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     library(dplyr)
 
     # Warnings
-    if (is.numeric(c(eff_size, n1, n2, ndatasets, rho, BF_thresh1, BF_thresh0, 
-                     eta1, eta0, b_fract, max, batch_size)) == FALSE) 
+    if (is.numeric(c(eff_size, n1, n2, ndatasets, rho, BF_thresh1, BF_thresh0,
+                     eta1, eta0, b_fract, max, batch_size)) == FALSE)
         stop("All arguments, except 'fixed', must be numeric")
     if (eff_size < 0) stop("The effect size must be a positive value ")
     if (rho > 1) stop("The intraclass correlation must be standardized and cannot be larger than 1")
@@ -79,7 +80,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
         data_H1 <- do.call(gen_CRT_data, list(ndatasets, n1, n2, var_u0, var_e,
                                               mean_interv = eff_size,
                                               batch_size = batch_size))
-        
+
         # If H0 is true
         data_H0 <- do.call(gen_CRT_data, list(ndatasets, n1, n2, var_u0, var_e,
                                               mean_interv = eff_size0,
@@ -89,30 +90,30 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
             #Approximated adjusted fractional Bayes factors------------------------------
             n_eff_H1 <- ((n1 * n2) / (1 + (n1 - 1) * data_H1$rho_data)) / 2
             output_AAFBF_H1 <- Map(calc_aafbf, type, data_H1$estimates, data_H1$cov_list, list(b), n_eff_H1)
-            
+
             n_eff_H0 <- ((n1 * n2) / (1 + (n1 - 1) * data_H0$rho_data)) / 2
             output_AAFBF_H0 <- Map(calc_aafbf, type, data_H0$estimates, data_H0$cov_list, list(b), n_eff_H0)
-            
+
             # Results ---------------------------------------------------------------------
             results_H1[, 1] <- unlist(lapply(output_AAFBF_H1, extract_res, 1)) # Bayes factor H1vsH0
             results_H1[, 2] <- unlist(lapply(output_AAFBF_H1, extract_res, 4)) #posterior model probabilities of H1
             results_H1[, 3] <- unlist(lapply(output_AAFBF_H1, extract_res, 2)) # Bayes factor H0vsH1
             results_H1[, 4] <- unlist(lapply(output_AAFBF_H1, extract_res, 3)) #posterior model probabilities of H0
-            
+
             colnames(results_H1) <- c("BF.10", "PMP.1", "BF.01", "PMP.0")
-            
+
             results_H0[, 1] <- unlist(lapply(output_AAFBF_H0, extract_res, 1)) # Bayes factor H1vsH0
             results_H0[, 2] <- unlist(lapply(output_AAFBF_H0, extract_res, 4)) #posterior model probabilities of H1
             results_H0[, 3] <- unlist(lapply(output_AAFBF_H0, extract_res, 2)) # Bayes factor H0vsH1
             results_H0[, 4] <- unlist(lapply(output_AAFBF_H0, extract_res, 3)) #posterior model probabilities of H0
-            
+
             colnames(results_H0) <- c("BF.10", "PMP.1", "BF.01", "PMP.0")
-            
+
             #Evaluation of condition -------------------------------------------
             # Proportion
             prop_BF10 <- length(which(results_H1[, "BF.10"] > BF_thresh1)) / ndatasets
             prop_BF01 <- length(which(results_H0[, "BF.01"] > BF_thresh0)) / ndatasets
-            
+
             # Evaluation
             ifelse(prop_BF01 > eta0 & prop_BF10 > eta1, conditions_met <- TRUE, conditions_met <- FALSE)
             previous_eta <- current_eta
@@ -131,7 +132,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                 eta <- ifelse(current_eta == prop_BF10, eta1, eta0)
             }
             # print("Bayes factor check!")
-            
+
             # Binary search algorithm ------------------------------------------
             if (conditions_met == FALSE) {
                 # print(c("Using cluster size:", n1, "and number of clusters:", n2,
@@ -161,7 +162,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         high <- high                      #higher bound
                         n2 <- round2((low + high) / 2)     #point in the middle
                         ifelse(n2 %% 2 == 0, n2 <- n2, n2 <- n2 + 1) # To ensure number of clusters is even
-                        
+
                         # Adjust higher bound when there is a ceiling effect
                         if (low + n2 == high * 2) {
                             low <- n2                         #lower bound
@@ -195,7 +196,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         low <- n1                        #lower bound
                         high <- high                     #higher bound
                         n1 <- round2((low + high) / 2)    #point in the middle
-                        
+
                         # Adjust higher bound when there is a ceiling effect
                         if ((low + n1 == high * 2) | (current_eta == previous_eta)) {
                             low <- n1                        #lower bound
@@ -228,7 +229,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                 # print("Lowerign sample")
                 # print(c("previous:", previous_eta))
                 previous_eta <- current_eta
-                
+
                 if (fixed == "n1") {
                     # Eta is close enough to the desired eta
                     if (current_eta - eta < 0.1 && n2 - low == 2) {
@@ -240,7 +241,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         previous_high <- 0
                         high <- max
                         next
-                        
+
                     } else if (previous_eta == current_eta && n2 - low == 2) {
                         # If there is no change in eta and the lower bound is close to the middle point
                         final_SSD[[b]] <- SSD_object
@@ -251,7 +252,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         previous_high <- 0
                         high <- max
                         next
-                        
+
                     } else {
                         # Decreasing to find the ultimate number of clusters
                         low <- low                         #lower bound
@@ -262,7 +263,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                                              This may cause problems in convergence and singularity.")
                         # print("Lowering") # Eliminate later
                         break
-                        
+
                     }
                 } else if (fixed == "n2") {
                     # Eta is close enough to the desired eta
@@ -275,7 +276,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         previous_high <- 0
                         high <- max
                         next
-                        
+
                     } else if (current_eta == previous_eta && n1 - low == 1) {
                         # If there is no change in eta and the lower bound is close to the middle point
                         final_SSD[[b]] <- SSD_object
@@ -286,7 +287,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         previous_high <- 0
                         high <- max
                         next
-                        
+
                     } else if (current_eta == previous_eta && low + n2 == high * 2) {
                         # Reached the minimum number that meets the Bayesian power condition
                         final_SSD[[b]] <- SSD_object
@@ -297,7 +298,7 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                         previous_high <- 0
                         high <- max
                         next
-                        
+
                     } else {
                         # Decreasing the cluster size to find the ultimate sample size
                         low <- low                         #lower bound
@@ -308,24 +309,24 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
                     }
                 }
             } # Finish condition met
-            
+
             # print(c("low:", low, "n2:", n2, "n1:", n1, "h:", high, "b:", b)) # Eliminate
         } # Finish while loop b
-        
+
         # print(c("b fraction:", b))
-        
+
         # Break loop
         if (b == b_fract + 1) {
             ultimate_sample_sizes <- TRUE
         }
-        
+
         rm(data_H0, data_H1)
     } # Finish while loop ultimate_sample_size
-    
+
     final_SSD[[b_fract + 1]] <- list(null, hypothesis1)
     final_SSD[[b_fract + 2]] <- list(BF_thresh0, BF_thresh1)
     final_SSD[[b_fract + 3]] <- list(eta0, eta1)
-    
+
     # Final output -----
     print_results(final_SSD)
     if (any(singular_warn > 0)) warning("At least one of the fitted models is singular. For more information about singularity see help('isSingular').

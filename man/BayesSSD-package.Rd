@@ -4,9 +4,9 @@
 \name{BayesSSD-package}
 \alias{BayesSSD}
 \alias{BayesSSD-package}
-\title{BayesSSD: Bayesian sample size determination for longitudinal experiments}
+\title{BayesSSD: Bayesian sample size determination for multilevel models}
 \description{
-This package performs simulation-based Bayesian sample size determination for longitudinal experiments.
+This package performs simulation-based Bayesian sample size determination (SSD) for multilevel models. For longitudinal SSD, use the function `SSD_longit`. In the longitudinal case, anticipated participant attrition can be taken into account.
 }
 \author{
 \strong{Maintainer}: Ulrich Lösener \email{u.c.losener1@uu.nl}

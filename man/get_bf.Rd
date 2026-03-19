@@ -6,39 +6,39 @@
 \usage{
 get_bf(
   N = 100,
+  hypothesis = "a<b<c",
+  eff.sizes = c(0, 0.5, 0.8),
+  t.points = c(0, 1, 2, 3, 4),
   attrition = "weibull",
   params = c(0.8, 1),
-  hypothesis = list("a<b<c", "a=b=c"),
-  t.points = c(0, 1, 2),
-  var.u0 = 0.01,
+  var.u0 = 0.033,
   var.u1 = 0.002,
+  var.e = 0.026,
   cov = 0,
-  var.e = 0.01,
-  eff.sizes = c(0.8, -0.45, . - 0.46),
   fraction = 1,
   log.grow = F
 )
 }
 \arguments{
-\item{N}{The number of subjects}
+\item{N}{The total number of subjects or a vector with group sizes for each condition}
+
+\item{hypothesis}{The hypothesis to be evaluated. Treatment groups are coded as "a", "b", "c", etc.}
+
+\item{eff.sizes}{The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.}
+
+\item{t.points}{The points in time of measurement. Can be non-equidistant.}
 
 \item{attrition}{The attrition pattern (FALSE for no attrition, otherwise "weibull", "modified_weibull", "linear_exponential", "log_logistic", "gompertz" or "non-parametric")}
 
 \item{params}{The parameters passed to the survival function specified in "attrition". First parameter is omega, second is gamma.}
 
-\item{hypothesis}{The hypothesis to be evaluated. Treatment groups are coded as "a", "b", "c", etc.}
-
-\item{t.points}{The points in time of measurement. Can be non-equidistant.}
-
 \item{var.u0}{The intercept variance.}
 
 \item{var.u1}{The slope variance.}
 
-\item{cov}{The covariance between intercept variance and slope variance.}
-
 \item{var.e}{The residual variance.}
 
-\item{eff.sizes}{The effect sizes defined as the differences between the regression coefficients of interaction between time and condition.}
+\item{cov}{The covariance between intercept variance and slope variance.}
 
 \item{fraction}{The fraction of information used to construct the prior for the Bayes Factor.}
 
@@ -51,5 +51,5 @@ Returns the Bayes Factor or Posterior Model Probabilities for the hypothesis.
 Calculate the Bayes Factor and posterior model probabilities
 }
 \examples{
-getbf_mis_mv(N=100, attrition="weibull", params=list(.8,1), hypothesis=list("a<b<c","a=b=c"), t.points=c(0,1,2))
+get_bf(N=100, attrition="weibull", params=list(.8,1), hypothesis=list("a<b<c","a=b=c"), t.points=c(0,1,2))
 }
