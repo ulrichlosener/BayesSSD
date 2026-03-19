@@ -1,4 +1,9 @@
 ############################## PRINT RESULTS #################################
+#'@title print results
+#'@description print results
+#'@param object_result object containing the result
+#'@export
+#'
 
 print_results <- function(object_result) {
     title <- "Final sample size"
@@ -21,13 +26,13 @@ print_results <- function(object_result) {
         results_matrix[, 3] <- round(as.numeric(head(unlist(lapply(object_result_b, `[[`, 2)), b_number))) #n2
         results_matrix[, 4] <- round(as.numeric(head(unlist(lapply(object_result_b, `[[`, 3)), b_number)), 3) #BF_01
         results_matrix[, 5] <- round(as.numeric(head(unlist(lapply(object_result_b, `[[`, 4)), b_number)), 3) #BF_10
-        colnames(results_matrix) <- c("b", "n1", "n2", paste("P(BF.01 >", object_result[[(n_object - 1)]][[1]], "| H0) > ", object_result[[n_object]][[1]], sep = " "), 
+        colnames(results_matrix) <- c("b", "n1", "n2", paste("P(BF.01 >", object_result[[(n_object - 1)]][[1]], "| H0) > ", object_result[[n_object]][[1]], sep = " "),
                                       paste("P(BF.10 >", object_result[[(n_object - 1)]][[2]], "| H1) > ", object_result[[n_object]][[2]], sep = " "))
-        
+
         cat("Hypotheses:", "\n")
         cat("    H0:", object_result[[b_number + 1]][[1]], "\n")
         cat("    H1:", object_result[[b_number + 1]][[2]], "\n")
-        
+
         cat("***********************************************************************", "\n")
         print(format(results_matrix, justify = "centre"))
         cat("***********************************************************************", "\n")

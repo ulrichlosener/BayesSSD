@@ -1,4 +1,5 @@
 ########################## SMALL FUNCTIONS ###########################
+#'@export
 
 # Model fitting
 fit_lmer <- function(x) {
