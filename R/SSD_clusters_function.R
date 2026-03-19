@@ -38,10 +38,10 @@ SSD_crt_null <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_t
     if ((b_fract == round(b_fract)) == FALSE) stop("The fraction of information (b) must be an integer")
 
     #Functions ----------------
-    source("data_generation.R")
-    source("small_functions.R")
-    source("print_results.R")
-    source("aafbf.R")
+    # source("data_generation.R")
+    # source("small_functions.R")
+    # source("print_results.R")
+    # source("aafbf.R")
 
     # Starting values ----------------------------------------------------------
     total_var <- 1

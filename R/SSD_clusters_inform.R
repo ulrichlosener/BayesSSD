@@ -35,10 +35,10 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
     if (fixed %in% c("n1", "n2") == FALSE) stop("Fixed can only be a character indicating n1 or n2.")
 
     # Functions
-    source('data_generation.R')
-    source("small_functions.R")
-    source("print_results.R")
-    source("aafbf.R")
+    # source('data_generation.R')
+    # source("small_functions.R")
+    # source("print_results.R")
+    # source("aafbf.R")
 
     # Starting values ----------------------------------------------------------
     total_var <- 1
