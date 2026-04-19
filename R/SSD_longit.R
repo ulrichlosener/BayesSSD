@@ -82,7 +82,6 @@ SSD_longit <- function(eta=.8,
     if(!is.null(seed)) {set.seed(seed)}  # set user-specified seed for reproducibility
 
     N <- list()
-    group.sizes <- group.sizes / sum(group.sizes)            # set group.sizes to correct scale if necessary
     n_cond <- length(eff.sizes)                              # extract number of conditions
 
     candidate_N <- seq(from = N.min,
@@ -109,6 +108,7 @@ SSD_longit <- function(eta=.8,
         if (is.null(group.sizes)) { # balanced design
           N[[j]] <- N_tot
         } else { # unbalanced design via ratios
+          group.sizes <- group.sizes / sum(group.sizes)            # set group.sizes to correct scale if necessary
           N_raw <- N_tot * group.sizes
           N[[j]] <- floor(N_raw)
         }
