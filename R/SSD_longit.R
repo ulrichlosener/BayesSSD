@@ -91,10 +91,11 @@ SSD_longit <- function(eta=.8,
     condition <- FALSE                                        # condition initially FALSE until power criterion is reached
     stuck <- FALSE                                            # indicator if algorithm is stuck on repeated sample size
     j <- 1                                                    # iteration counter
-    pow <- 0                                                  # initialize power
     av_it <- round(log(((N.max - N.min + 1)/n_cond), base=2)) # approximation of average numbers of iterations
-    N_min <- N.min
-    N_max <- N.max
+    pb <- txtProgressBar(min = 0, max = av_it, style = 3)     # progress bar
+    pow <- 0                                                  # initialize power
+    N_min <- N.min                                            # initialize lower bound of sample sizes
+    N_max <- N.max                                            # initialize upper bound of sample sizes
 
     start_time <- Sys.time()
 
@@ -155,22 +156,19 @@ SSD_longit <- function(eta=.8,
           pow <- results$power_bf
         }
 
-        # Calculate time metrics
-        elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
-        avg_time_per_iter <- elapsed / j
-        remaining_time <- avg_time_per_iter * (av_it - j)
-
         # Print progress
+        elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
+
         if(is.null(group.sizes)){
           cat(
-            sprintf("Iteration %d: N = %d | Power = %.3f | Elapsed: %.1f minutes | Remaining: ~ %.1f minutes \n",
-                    j, unlist(N[[j]]), pow, elapsed, remaining_time)
+            sprintf("Iteration %d: N = %d | Power = %.3f | Elapsed: %.1f minutes \n",
+                    j, unlist(N[[j]]), pow, elapsed)
           )
         } else {
           cat(
             sprintf(
-              "Iteration %d: N_total = %d | N_g = (%s) | Power = %.3f | Elapsed: %.1f minutes | Remaining: ~ %.1f minutes \n",
-              j, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow, elapsed, remaining_time)
+              "Iteration %d: N_total = %d | N_g = (%s) | Power = %.3f | Elapsed: %.1f minutes \n",
+              j, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow, elapsed)
           )
         }
 
@@ -186,14 +184,14 @@ SSD_longit <- function(eta=.8,
           )
         }
 
-        # if the current N is evaluated twice, condition is met
+        # if the current N is evaluated twice, or difference between N_min and N_max is 1 or less, condition is met
         if(length(N) > 2){
-          if(sum(N[[j-1]]) == sum(N[[j-2]])){
+          if(sum(N[[j-1]]) == sum(N[[j-2]]) | abs(N_max-N_min) <= 1) {
             stuck <- TRUE
           }
         }
         # if power level is close enough to desired power level, condition is met and the algorithm stops
-        if (round(abs(pow - eta), 8) <= tol | isTRUE(stuck)) {
+        if (round(abs(pow - eta), 8) <= tol | stuck) {
           condition <- TRUE
           total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
           if(is.null(group.sizes)){ # output for equal group sizes
@@ -208,8 +206,9 @@ SSD_longit <- function(eta=.8,
             )
           }
         }
-        # increase iteration by 1
-        j <- j+1
+        setTxtProgressBar(pb, j) # update progress bar
+        j <- j+1                 # update iteration number
+
       }
 
     } else {
@@ -285,22 +284,19 @@ SSD_longit <- function(eta=.8,
             pow <- results$power_bf
           }
 
-          # Calculate time metrics
-          elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
-          avg_time_per_iter <- elapsed / j
-          remaining_time <- avg_time_per_iter * (av_it - j)
-
           # Print progress
+          elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
+
           if(is.null(group.sizes)){
              cat(
-              sprintf("Iteration %d: N = %d | Power = %.3f | Elapsed: %.1f minutes | Total remaining: ~ %.1f minutes \n",
-                      j, unlist(N[[j]]), pow, elapsed, remaining_time)
+              sprintf("Iteration %d: N = %d | Power = %.3f | Elapsed: %.1f minutes \n",
+                      j, unlist(N[[j]]), pow, elapsed)
             )
           } else {
             cat(
               sprintf(
-                "Iteration %d: N_total = %d | N_g = (%s) | Power = %.3f | Elapsed: %.1f minutes | Remaining: ~ %.1f minutes \n",
-                j, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow, elapsed, remaining_time)
+                "Iteration %d: N_total = %d | N_g = (%s) | Power = %.3f | Elapsed: %.1f minutes \n",
+                j, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow, elapsed)
             )
           }
 
@@ -318,7 +314,7 @@ SSD_longit <- function(eta=.8,
 
           # if the current N is evaluated twice, condition is met
           if(length(N) > 2){
-            if(sum(N[[j-1]]) == sum(N[[j-2]])){
+            if(sum(N[[j-1]]) == sum(N[[j-2]]) | abs(N_max-N_min) <= 1){
               stuck <- TRUE
             }
           }
@@ -340,8 +336,8 @@ SSD_longit <- function(eta=.8,
             }
           }
 
-          # increase iteration by 1
-          j <- j+1
+          setTxtProgressBar(pb, j) # update progress bar
+          j <- j+1                 # update iteration number
         }
       }
     }
