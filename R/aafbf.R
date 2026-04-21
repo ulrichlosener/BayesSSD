@@ -1,16 +1,20 @@
 ####################### CALCULATE AAFBF #####################################
 
-#'@title CALCULATE AAFBF
-#'@description aafbf
-#'@param type String that indicates the type of comparison of hypotheses. "equality"
+#' @title CALCULATE AAFBF
+#' @description aafbf
+#' @param type String that indicates the type of comparison of hypotheses. "equality"
 #       test for only equality vs. only inequality, "inequalities" test for only
 #       inequality vs. only inequality.
-#'@param estimates R object with estimates.
-#'@param n numeric. Effective sample size.
-#'@param sigma list with covariances.
-#'@param b Numerical. Fraction of information to specify the prior.
-#'@param n_eff Effective sample size.
-#'@export
+#' @param estimates R object with estimates.
+#' @param n numeric. Effective sample size.
+#' @param sigma list with covariances.
+#' @param b Numerical. Fraction of information to specify the prior.
+#' @param n_eff Effective sample size.
+#' @export
+#'
+#' @examples
+#' calc_aafbf(type="Inequalities", estimates=.2, sigma=list(.1), b=1, n_eff=100)
+
 
 calc_aafbf <- function(type, estimates, sigma, b, n_eff) {
     if (type == "Inequalities") {

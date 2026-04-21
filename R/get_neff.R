@@ -14,8 +14,9 @@
 #' library(lme4)
 #' library(Matrix)
 #' library(MASS)
-#' get_neff_mis_mv(model = lmermodel, N=100, t.points=c(0,1,2,3,4),
-#'                surviv=list(c(1,.9,.8,.6,.5), c(1,.85,.7,.5,.3), c(1,.95,.9,.8,.7)))
+#' get_neff(model = lmermodel, N=100, t.points=c(0,1,2,3,4),
+#'         surviv=list(c(1,.9,.8,.6,.5), c(1,.85,.7,.5,.3),
+#'         c(1,.95,.9,.8,.7)))
 
 get_neff <- function(model, surviv) {
 

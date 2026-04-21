@@ -15,7 +15,10 @@
 #'@param batch_size This parameter determines the size of batches used during the fitting of the multilevel model.
 #' @export
 #' @return Returns the result of the SSD procedure for CRT
-#' @examples SSD_crt_inform(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh, eta = 0.8, fixed = 'n2', max = 1000, batch_size = 100)
+#' @examples
+#' SSD_crt_inform(eff_size, n1 = 15, n2 = 30,
+#' ndatasets = 1000, rho, BF_thresh, eta = 0.8,
+#' fixed = 'n2', max = 1000, batch_size = 100)
 
 SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh,
                            eta = 0.8, fixed = 'n2', max = 1000, batch_size = 100) {
@@ -77,7 +80,7 @@ SSD_crt_inform <- function(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF
         #Approximated adjusted fractional Bayes factors------------------------------
         n_eff_H1 <- ((n1 * n2) / (1 + (n1 - 1) * data_H1$rho_data)) / 2
         output_AAFBF_H1 <- Map(calc_aafbf, type, data_H1$estimates, data_H1$cov_list, list(1), n_eff_H1)
-  
+
         # Results ---------------------------------------------------------------------
         results_H1[, 1] <- unlist(lapply(output_AAFBF_H1, extract_res, 1)) # Bayes factor H1vsH2
         results_H1[, 2] <- unlist(lapply(output_AAFBF_H1, extract_res, 4)) #posterior model probabilities of H1

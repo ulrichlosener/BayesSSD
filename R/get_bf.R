@@ -15,7 +15,9 @@
 #' @importFrom bain bain
 #' @export
 #' @return Returns the Bayes Factor or Posterior Model Probabilities for the hypothesis.
-#' @examples get_bf(N=100, attrition="weibull", params=list(.8,1), hypothesis=list("a<b<c","a=b=c"), t.points=c(0,1,2))
+#' @examples
+#' get_bf(N=100, attrition="weibull", params=list(.8,1),
+#' hypothesis=list("a<b<c","a=b=c"), t.points=c(0,1,2))
 
 get_bf <- function(N=100,
                    hypothesis="a<b<c",
@@ -49,7 +51,7 @@ get_bf <- function(N=100,
 
   n <- length(t.points)  # number of measurement occasions
 
-  if(length(N)==1){ # in case of equal group sizes -----------------------------
+  if(length(N) == 1){ # in case of equal group sizes -----------------------------
 
     # create time variable t
     if(!log.grow) {
@@ -81,7 +83,7 @@ get_bf <- function(N=100,
       error = rnorm(N * n, 0, sqrt(var.e))    # residual
     )
 
-  } else if(length(N)==n_cond){ # in case of unequal group sizes ---------------
+  } else if(length(N) == n_cond){ # in case of unequal group sizes ---------------
 
     N_tot <- sum(N) # total sample size
 

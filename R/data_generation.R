@@ -1,17 +1,19 @@
 ######################## DATA GENERATION ##############################
 
-#'@title Generation of data sets for two treatment-condition cluster randomized trial
-#'@description data generation
-#'@param ndatasets Numeric. Number of data sets that the user wants to generate to determine the sample size
-#'@param n1 Numeric. Cluster size
-#'@param n2 Numeric. Total number of clusters.
-#'@param rho Numeric. Intraclass correlation
-#'@param var_u0 Numeric. Between-cluster variance. Variance at the cluster level.
-#'@param var_e Numeric. Within-cluster variance.
-#'@param mean_interv Numeric. Equivalent to the effect size.
-#'@param batch_size This parameter determines the size of batches used during the fitting of the multilevel model.
-#'@export
-
+#' @title Generation of data sets for two treatment-condition cluster randomized trial
+#' @description data generation
+#' @param ndatasets Numeric. Number of data sets that the user wants to generate to determine the sample size
+#' @param n1 Numeric. Cluster size
+#' @param n2 Numeric. Total number of clusters.
+#' @param rho Numeric. Intraclass correlation
+#' @param var_u0 Numeric. Between-cluster variance. Variance at the cluster level.
+#' @param var_e Numeric. Within-cluster variance.
+#' @param mean_interv Numeric. Equivalent to the effect size.
+#' @param batch_size This parameter determines the size of batches used during the fitting of the multilevel model.
+#' @export
+#'
+#' @examples
+#' gen_CRT_data(ndatasets=10, n1=30, n2=10, var_u0=.01, var_e=.1, mean_interv=.5, batch_size=5)
 
 
 gen_CRT_data <- function(ndatasets = ndatasets, n1 = n1, n2 = n2, var_u0 = var_u0,
