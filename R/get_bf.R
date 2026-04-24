@@ -210,8 +210,9 @@ get_bf <- function(N=100,
   }
 
   # Extract estimates and variances from the model
-  slope_names <- names(coefs)[grepl(":t$", names(coefs))]
-  est <- fixef(model)[slope_names]
+  fix_ef <- fixef(model)
+  slope_names <- names(fix_ef)[grepl(":t$", names(fix_ef))]
+  est <- fix_ef[slope_names]
   names(est) <- cond_letters # name them for bain
   Sigma <- lapply(slope_names, function(nm) {
     as.matrix(vcov(model)[nm, nm, drop = FALSE])
