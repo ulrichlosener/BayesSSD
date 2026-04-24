@@ -93,7 +93,8 @@ SSD_longit <- function(eta=.8,
     j <- 1                                                    # iteration counter
     av_it <- round(log(((N.max - N.min + 1)/n_cond), base=2)) # approximation of average numbers of iterations
     pb <- txtProgressBar(min = 0, max = av_it, style = 3)     # progress bar
-    pow <- 0                                                  # initialize power
+    pow <- list()                                             # initialize power
+    prop_simple <- list()                                     # initialize proportion of simplified models
     N_min <- N.min                                            # initialize lower bound of sample sizes
     N_max <- N.max                                            # initialize upper bound of sample sizes
 
@@ -116,7 +117,7 @@ SSD_longit <- function(eta=.8,
 
         # set m according to iteration/difference between actual (pow) and desired power (eta)
         if(m>=5000){
-          if(j==1 | abs(pow-eta) > .1){ # in the first iteration or if the difference between pow and eta is at least .1, set m to 1000
+          if(j==1 | abs(pow[[j]]-eta) > .1){ # in the first iteration or if the difference between pow and eta is at least .1, set m to 1000
             current_m <- 1000
           } else {
             current_m <- m
@@ -132,83 +133,49 @@ SSD_longit <- function(eta=.8,
                              cov=cov, var.e=var.e, eff.sizes=eff.sizes,
                              BFthres=BFthres, PMPthres=PMPthres, hypothesis=hypothesis)
 
-        # check if power is larger or smaller than desired power
+        prop_simple[[j]] <- results$prop_simplified # store proportion of models simplified due to too many missing values
+
+        # check if power is larger or smaller than desired power and update N
         if(method == "bfc" | method == "BFc" | method == "bf_c" | method == "BF_c"){
           if(results$power_bfc >= eta){
             N_max <- sum(N[[j]]) - 1
           } else {
             N_min <- sum(N[[j]]) + 1
           }
-          pow <- results$power_bfc
+          pow[[j]] <- results$power_bfc
         } else if(method == "pmp" | method == "PMP"){
           if(results$power_pmp >= eta){
             N_max <- sum(N[[j]]) - 1
           } else {
             N_min <- sum(N[[j]]) + 1
           }
-          pow <- results$power_pmp
+          pow[[j]] <- results$power_pmp
         } else if(method == "bf" | method == "BF"){
           if(results$power_bf >= eta){
             N_max <- sum(N[[j]]) - 1
           } else{
             N_min <- sum(N[[j]]) + 1
           }
-          pow <- results$power_bf
+          pow[[j]] <- results$power_bf
         }
 
-        # Print progress
-        elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
-
-        if(is.null(group.sizes)){
-          cat(
-            sprintf("Iteration %d: N = %d | Power = %.3f | Elapsed: %.1f minutes \n",
-                    j, unlist(N[[j]]), pow, elapsed)
-          )
-        } else {
-          cat(
-            sprintf(
-              "Iteration %d: N_total = %d | N_g = (%s) | Power = %.3f | Elapsed: %.1f minutes \n",
-              j, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow, elapsed)
-          )
-        }
-
-        # Warn about simplified models due to too little observations
-        if(results$prop_simplified >= .001) {
-          cat(
-            sprintf("Iteration %d: %.1f%% of models required simplification (independent random effects) due to high attrition (too little observations) \n",
-                    j, results$prop_simplified * 100)
-          )
-        } else if(results$prop_simplified < .001 & results$prop_simplified > 0) {
-          cat(
-            "< 0.1% of models required simplification (independent random effects) due to high attrition (too little observations) \n"
-          )
-        }
-
+        # evaluate power condition
         # if the current N is evaluated twice, or difference between N_min and N_max is 1 or less, condition is met
         if(length(N) > 2){
           if(sum(N[[j-1]]) == sum(N[[j-2]]) | abs(N_max-N_min) <= 1) {
             stuck <- TRUE
           }
         }
+
         # if power level is close enough to desired power level, condition is met and the algorithm stops
-        if (round(abs(pow - eta), 8) <= tol | stuck) {
+        if (round(abs(pow[[j]] - eta), 8) <= tol | stuck) {
           condition <- TRUE
           total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
-          if(is.null(group.sizes)){ # output for equal group sizes
-            cat(
-              sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f) \n",
-                      j, total_time, unlist(N[[j]]), pow)
-            )
-          } else{ # output for unequal group sizes
-            cat(
-              sprintf("\nConverged in %d iterations (%.1f minutes). Final N_total = %d | N_g = (%s) | Power = %.3f \n",
-                      j, total_time, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow)
-            )
-          }
         }
-        setTxtProgressBar(pb, j) # update progress bar
-        j <- j+1                 # update iteration number
 
+        setTxtProgressBar(pb, j) # update progress bar
+        flush.console()          # clear console
+        j <- j+1                 # update iteration number
       }
 
     } else {
@@ -219,7 +186,7 @@ SSD_longit <- function(eta=.8,
         condition <- FALSE    # condition initially FALSE until power criterion is reached
         stuck <- FALSE        # repeated sample size from previous iteration?
         j <- 1                # iteration counter
-        pow <- 0              # initialize power
+        pow <- list()         # initialize power
         av_it <- round(log((N.max - N.min + 1), base=2)) # approximation of average numbers of iterations
         N_min <- N.min
         N_max <- N.max
@@ -244,7 +211,7 @@ SSD_longit <- function(eta=.8,
 
           # set m according to iteration/difference between actual (pow) and desired power (eta)
           if(m>=5000){
-            if(j==1 | abs(pow-eta) > .1){ # in the first iteration or if the difference between pow and eta is at least .1, set m to 1000
+            if(j==1 | abs(pow[[j]]-eta) > .1){ # in the first iteration or if the difference between pow and eta is at least .1, set m to 1000
               current_m <- 1000
             } else {
               current_m <- m
@@ -267,21 +234,21 @@ SSD_longit <- function(eta=.8,
             } else {
               N_min <- sum(N[[j]]) + 1
             }
-            pow <- results$power_bfc
+            pow[[j]] <- results$power_bfc
           } else if(method == "pmp" | method == "PMP"){
             if(results$power_pmp >= eta){
               N_max <- sum(N[[j]]) - 1
             } else {
               N_min <- sum(N[[j]]) + 1
             }
-            pow <- results$power_pmp
+            pow[[j]] <- results$power_pmp
           } else if(method == "bf" | method == "BF"){
             if(results$power_bf >= eta){
               N_max <- sum(N[[j]]) - 1
             } else{
               N_min <- sum(N[[j]]) + 1
             }
-            pow <- results$power_bf
+            pow[[j]] <- results$power_bf
           }
 
           # Print progress
@@ -290,23 +257,24 @@ SSD_longit <- function(eta=.8,
           if(is.null(group.sizes)){
              cat(
               sprintf("Iteration %d: N = %d | Power = %.3f | Elapsed: %.1f minutes \n",
-                      j, unlist(N[[j]]), pow, elapsed)
+                      j, unlist(N[[j]]), pow[[j]], elapsed)
             )
           } else {
             cat(
               sprintf(
                 "Iteration %d: N_total = %d | N_g = (%s) | Power = %.3f | Elapsed: %.1f minutes \n",
-                j, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow, elapsed)
+                j, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow[[j]], elapsed)
             )
           }
 
           # Warn about simplified models due to too little observations
-          if(results$prop_simplified >= .001) {
+          prop_simple[[j]] <- results$prop_simplified
+          if(prop_simple[[j]] >= .001) {
             cat(
               sprintf("%.1f%% of models required simplification (independent random effects) due to high attrition (too little observations) \n",
-                      results$prop_simplified * 100)
+                      prop_simple[[j]] * 100)
             )
-          } else if(results$prop_simplified < .001 & results$prop_simplified > 0) {
+          } else if(prop_simple[[j]] < .001 & prop_simple[[j]] > 0) {
             cat(
               "< 0.1% of models required simplification (independent random effects) due to high attrition (too little observations) \n"
             )
@@ -320,23 +288,24 @@ SSD_longit <- function(eta=.8,
           }
 
           # if power level is close enough to desired power level, condition is met and the algorithm stops
-          if(round(abs(pow - eta), 8) <= tol | isTRUE(stuck)) {
+          if(round(abs(pow[[j]] - eta), 8) <= tol | isTRUE(stuck)) {
             condition <- TRUE
             total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
             if(is.null(group.sizes)){ # output for equal group sizes
               cat(
                 sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f) \n",
-                        j, total_time, unlist(N[[j]]), pow)
+                        j, total_time, unlist(N[[j]]), pow[[j]])
               )
             } else{ # output for unequal group sizes
               cat(
                 sprintf("\nConverged in %d iterations (%.1f minutes). Final N_total = %d | N_g = (%s) | Power = %.3f \n",
-                        j, total_time, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow)
+                        j, total_time, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow[[j]])
               )
             }
           }
 
           setTxtProgressBar(pb, j) # update progress bar
+          flush.console()
           j <- j+1                 # update iteration number
         }
       }
@@ -351,6 +320,30 @@ SSD_longit <- function(eta=.8,
     future::plan(future::sequential)
     stop(e)  # Re-throw the error
   })
+
+  close(pb) # close progressbar
+
+  # return results
+  res <- list(
+    evaluations = data.frame(
+      N = unlist(N),
+      power = round(unlist(pow), 2),
+      prop_simplified = unlist(prop_simple)
+    ),
+    final = list(
+      N = N[[j-1]],
+      power = pow[[j-1]],
+      threshold = BFthres
+    ),
+    hypotheses = list(
+      hypothesis = hypothesis,
+      comparison = method
+    ),
+    iterations = j,
+    runtime = round(total_time)
+  )
+
+  print_results_SSD_longit(res)
 }
 
 # END OF FUNCTION --------------------------------------------------------------
