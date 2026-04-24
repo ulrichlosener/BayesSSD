@@ -17,7 +17,7 @@ print_results_SSD_longit <- function(result) {
     cat("    H1:", result$hypotheses$hypothesis, "\n")
     cat("    Hc: not H1\n")
     cat("Using  a total of N =", sum(result$final$N), "Participants\n")
-    cat("P (BF_1c >", result$final$threshold, "| H1) = ", res$final$power, "\n")
+    cat("P (BF_1c >", result$final$threshold, "| H1) = ", result$final$power, "\n")
   } else {                                        # NOT YET IMPLEMENTED
     n_object <- length(object_result)
     b_number <- n_object - 3
