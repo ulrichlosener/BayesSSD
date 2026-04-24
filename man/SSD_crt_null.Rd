@@ -50,5 +50,8 @@ Returns the result of the SSD procedure for CRT
 SSD for CRT
 }
 \examples{
-SSD_crt_null(eff_size, n1 = 15, n2 = 30, ndatasets = 1000, rho, BF_thresh1, BF_thresh0, eta1 = 0.8, eta0 = 0.8, fixed = "n2", b_fract = 3, max = 1000, batch_size = 100)
+SSD_crt_null(eff_size, n1 = 15, n2 = 30,
+ndatasets = 1000, rho, BF_thresh1, BF_thresh0,
+eta1 = 0.8, eta0 = 0.8, fixed = "n2", b_fract = 3,
+max = 1000, batch_size = 100)
 }

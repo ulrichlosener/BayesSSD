@@ -51,5 +51,6 @@ Returns the Bayes Factor or Posterior Model Probabilities for the hypothesis.
 Calculate the Bayes Factor and posterior model probabilities
 }
 \examples{
-get_bf(N=100, attrition="weibull", params=list(.8,1), hypothesis=list("a<b<c","a=b=c"), t.points=c(0,1,2))
+get_bf(N=100, attrition="weibull", params=list(.8,1),
+hypothesis=list("a<b<c","a=b=c"), t.points=c(0,1,2))
 }

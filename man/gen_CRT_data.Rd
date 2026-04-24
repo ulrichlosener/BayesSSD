@@ -34,3 +34,6 @@ gen_CRT_data(
 \description{
 data generation
 }
+\examples{
+gen_CRT_data(ndatasets=10, n1=30, n2=10, var_u0=.01, var_e=.1, mean_interv=.5, batch_size=5)
+}

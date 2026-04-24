@@ -22,3 +22,6 @@ calc_aafbf(type, estimates, sigma, b, n_eff)
 \description{
 aafbf
 }
+\examples{
+calc_aafbf(type="Inequalities", estimates=.2, sigma=list(.1), b=1, n_eff=100)
+}

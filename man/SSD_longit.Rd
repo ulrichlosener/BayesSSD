@@ -9,7 +9,7 @@ SSD_longit(
   hypothesis = "a<b<c",
   eff.sizes = c(0, 0.5, 0.8),
   t.points = c(0, 1, 2, 3, 4),
-  m = 10000,
+  m = 100,
   BFthres = 5,
   PMPthres = 0.9,
   method = "bfc",

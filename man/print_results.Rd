@@ -12,3 +12,6 @@ print_results(object_result)
 \description{
 print results
 }
+\details{
+Print results for CRT
+}
