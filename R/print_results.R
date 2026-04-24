@@ -1,4 +1,4 @@
-############################## PRINT RESULTS #################################
+#' Print results for CRT
 #'@title print results
 #'@description print results
 #'@param object_result object containing the result

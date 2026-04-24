@@ -36,7 +36,7 @@ SSD_longit <- function(eta=.8,
                        hypothesis="a<b<c",
                        eff.sizes=c(0, .5, .8),
                        t.points=c(0,1,2,3,4),
-                       m=10000,
+                       m=1000,
                        BFthres=5,
                        PMPthres=.9,
                        method="bfc",
@@ -334,7 +334,7 @@ SSD_longit <- function(eta=.8,
     ),
     final = list(
       N = N[[j-1]],
-      power = pow[[j-1]],
+      power = round(pow[[j-1]], 3),
       threshold = BFthres
     ),
     hypotheses = list(
@@ -345,6 +345,7 @@ SSD_longit <- function(eta=.8,
     runtime = round(total_time)
   )
 
+  # print results
   print_results_SSD_longit(res)
 }
 
