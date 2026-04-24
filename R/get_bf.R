@@ -45,7 +45,7 @@ get_bf <- function(N=100,
   }
 
   # check maximum number of conditions
-  if(length(n_cond) > 10) {
+  if(n_cond > 10) {
     stop("The maximum number of treatment conditions is 10")
   }
 
@@ -72,16 +72,16 @@ get_bf <- function(N=100,
 
     # generate data
     multinorm <- MASS::mvrnorm(n=N, mu=c(0,0), Sigma=matrix(c(var.u0, cov, cov, var.u1), 2, 2)) # draw random effects
-    treat_coefs <- eff.sizes[-1] * sqrt(var.u1) + eff.sizes[1] * sqrt(var.u1) # cumulative effect sizes
-    treat_dummies <- model.matrix(~ treat - 1, data = dat0)[, -1, drop = FALSE] # create dummies
+    treat_coefs <- eff.sizes * sqrt(var.u1)
+    treat_dummies <- model.matrix(~ treat - 1, data = dat0)
 
     components <- list(
-      base = eff.sizes[1] * sqrt(var.u1) * t, # baseline effect for condition "a"
-      u0 = rep(multinorm[, 1], each=n),       # random intercepts
-      u1 = rep(multinorm[, 2], each=n) * t,   # random slopes
-      treatments = rowSums(treat_dummies * (t %*% t(treat_coefs))), # betas for each condition
-      error = rnorm(N * n, 0, sqrt(var.e))    # residual
+      u0 = rep(multinorm[, 1], each=n),                 # random intercepts
+      u1 = rep(multinorm[, 2], each=n) * t,             # random slopes
+      treatments = (treat_dummies %*% treat_coefs) * t, # betas * dummies * time
+      error = rnorm(N * n, 0, sqrt(var.e))              # residual
     )
+
 
   } else if(length(N) == n_cond){ # in case of unequal group sizes ---------------
 
@@ -112,14 +112,13 @@ get_bf <- function(N=100,
 
     # generate data
     multinorm <- MASS::mvrnorm(n=N_tot, mu=c(0, 0), Sigma=matrix(c(var.u0, cov, cov, var.u1), 2, 2))
-    treat_coefs <- eff.sizes[-1] * sqrt(var.u1) + eff.sizes[1] * sqrt(var.u1)
-    treat_dummies <- model.matrix(~treat - 1, data = dat0)[, -1, drop = FALSE]
+    treat_coefs <- eff.sizes * sqrt(var.u1)
+    treat_dummies <- model.matrix(~ treat - 1, data = dat0)
 
     components <- list(
-      base = eff.sizes[1] * sqrt(var.u1) * t,
       u0 = rep(multinorm[, 1], each=n),
       u1 = rep(multinorm[, 2], each=n) * t,
-      treatments = rowSums(treat_dummies * (t %*% t(treat_coefs))),
+      treatments = (treat_dummies %*% treat_coefs) * t,
       error = rnorm(N_tot * n, 0, sqrt(var.e))
     )
 
@@ -188,7 +187,7 @@ get_bf <- function(N=100,
 
   # in case of identifiability issues due to high attrition, simplify the model (constrain random effects to be independent)
   model <- tryCatch({
-    lme4::lmer(formula = y ~ t + treat + t:treat + (1 + t | id),
+    lme4::lmer(formula = y ~ -1 + treat:t + treat + (1 + t | id),
                data = dat,
                REML = F,
                control = lme4::lmerControl(calc.derivs = F))
@@ -196,7 +195,7 @@ get_bf <- function(N=100,
     if (grepl("number of observations.*number of random effects", e$message)) {
       simplified <<- TRUE # indicate when simplidication happens
       tryCatch({
-        lme4::lmer(formula = y ~ t + treat + t:treat + (1 | id) + (0 + t | id), # independent random effects
+        lme4::lmer(formula = y ~ -1 + treat:t + treat + (1 + t || id), # independent random effects
                    data = dat,
                    REML = F,
                    control = lme4::lmerControl(calc.derivs = F))
@@ -210,13 +209,13 @@ get_bf <- function(N=100,
     stop("Rank deficiency due to high attrition rate. Consider lowering attrition rate.")
   }
 
-  # Extract estimates from the model
-  est_indices <- c(2, seq(2 + n_cond, length.out = n_cond-1)) # positions of relevant estimates
-  est <- model@beta[est_indices] # extract estimates
+  # Extract estimates and variances from the model
+  slope_names <- names(coefs)[grepl(":t$", names(coefs))]
+  est <- fixef(model)[slope_names]
   names(est) <- cond_letters # name them for bain
-
-  # Extract variances using the same indices as for the estimates
-  Sigma <- lapply(est_indices, function(i) as.matrix(vcov(model)[i,i]))
+  Sigma <- lapply(slope_names, function(nm) {
+    as.matrix(vcov(model)[nm, nm, drop = FALSE])
+  })
 
   # Hypothesis testing ---------------------------------------------------------
   # calculate N_eff
