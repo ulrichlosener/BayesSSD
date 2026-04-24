@@ -13,9 +13,10 @@ To install the latest release version of `BayesSSD` from GitHub follow these ste
 
 ```
 install.packages("devtools")                                         # install devtools package
-
+# For older devtools versions
 devtools::install_github("ulrichlosener/BayesSSD", upgrade="never")  # install BayesSSD from GitHub
-
+# For newer devtools versions
+pak::pak("urlichlosener/BayesSSD", upgrade=FALSE)
 library(BayesSSD)                                                    # load BayesSSD package
 ```
 
