@@ -117,7 +117,9 @@ SSD_longit <- function(eta=.8,
 
         # set m according to iteration/difference between actual (pow) and desired power (eta)
         if(m>=5000){
-          if(j==1 | abs(pow[[j]]-eta) > .1){ # in the first iteration or if the difference between pow and eta is at least .1, set m to 1000
+          if(j==1){ # in the first iteration, set m to 1000
+            current_m <- 1000
+          } else if(abs(pow[[j-1]] - eta) > .1) { # if the difference between pow and eta is at least .1, set m to 1000
             current_m <- 1000
           } else {
             current_m <- m
