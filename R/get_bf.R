@@ -210,7 +210,7 @@ get_bf <- function(N=100,
   }
 
   # Extract estimates and variances from the model
-  fix_ef <- fixef(model)
+  fix_ef <- lme4::fixef(model)
   slope_names <- names(fix_ef)[grepl(":t$", names(fix_ef))]
   est <- fix_ef[slope_names]
   names(est) <- cond_letters # name them for bain
