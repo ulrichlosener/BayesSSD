@@ -84,15 +84,13 @@ SSD_longit <- function(eta=.8,
     N <- list()
     n_cond <- length(eff.sizes)                              # extract number of conditions
 
-    candidate_N <- seq(from = N.min,
-                       to   = N.max,
-                       by   = 1)
+    candidate_N <- seq(from = N.min, to = N.max, by = 1)
 
     condition <- FALSE                                        # condition initially FALSE until power criterion is reached
     stuck <- FALSE                                            # indicator if algorithm is stuck on repeated sample size
     j <- 1                                                    # iteration counter
     av_it <- round(log(((N.max - N.min + 1)/n_cond), base=2)) # approximation of average numbers of iterations
-    pb <- txtProgressBar(min = 0, max = av_it, style = 3)     # progress bar
+    pb <- txtProgressBar(min = 0, max = 1, style = 3)         # progress bar
     pow <- list()                                             # initialize power
     prop_simple <- list()                                     # initialize proportion of simplified models
     N_min <- N.min                                            # initialize lower bound of sample sizes
@@ -100,9 +98,9 @@ SSD_longit <- function(eta=.8,
 
     start_time <- Sys.time()
 
-    if(sensitivity==F){
+    if(!sensitivity){
       ################### without sensitivity analysis #########################
-      while(condition == F){
+      while(!condition){
 
         N_mid <- round((N_min + N_max)/2 - .1, digits = 0)         # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
         N_tot <- candidate_N[which.min(abs(candidate_N - N_mid))]
@@ -111,22 +109,11 @@ SSD_longit <- function(eta=.8,
           N[[j]] <- N_tot
         } else { # unbalanced design via ratios
           group.sizes <- group.sizes / sum(group.sizes)            # set group.sizes to correct scale if necessary
-          N_raw <- N_tot * group.sizes
-          N[[j]] <- floor(N_raw)
+          N[[j]] <- floor(N_tot * group.sizes)
         }
 
-        # set m according to iteration/difference between actual (pow) and desired power (eta)
-        if(m>=5000){
-          if(j==1){ # in the first iteration, set m to 1000
-            current_m <- 1000
-          } else if(abs(pow[[j-1]] - eta) > .1) { # if the difference between pow and eta is at least .1, set m to 1000
-            current_m <- 1000
-          } else {
-            current_m <- m
-          }
-        } else {
-          current_m <- m
-        }
+        # set m according to distance to desired power
+        current_m <- if (m >= 5000 && j != 1 && abs(pow[[j-1]] - eta) <= .1) {m} else {min(m, 1000)}
 
         # generate data and store BFs
         results <- get_power(attrition=attrition, params=params, m=current_m, N=N[[j]],
@@ -135,71 +122,73 @@ SSD_longit <- function(eta=.8,
                              cov=cov, var.e=var.e, eff.sizes=eff.sizes,
                              BFthres=BFthres, PMPthres=PMPthres, hypothesis=hypothesis)
 
-        prop_simple[[j]] <- results$prop_simplified # store proportion of models simplified due to too many missing values
+        # extract correct power
+        current_power <- switch(tolower(method),
+                                "bfc" = results$power_bfc,
+                                "bf_c" = results$power_bfc,
+                                "pmp" = results$power_pmp,
+                                "bf"  = results$power_bf)
 
-        # check if power is larger or smaller than desired power and update N
-        if(method == "bfc" | method == "BFc" | method == "bf_c" | method == "BF_c"){
-          if(results$power_bfc >= eta){
-            N_max <- sum(N[[j]]) - 1
-          } else {
-            N_min <- sum(N[[j]]) + 1
-          }
-          pow[[j]] <- results$power_bfc
-        } else if(method == "pmp" | method == "PMP"){
-          if(results$power_pmp >= eta){
-            N_max <- sum(N[[j]]) - 1
-          } else {
-            N_min <- sum(N[[j]]) + 1
-          }
-          pow[[j]] <- results$power_pmp
-        } else if(method == "bf" | method == "BF"){
-          if(results$power_bf >= eta){
-            N_max <- sum(N[[j]]) - 1
-          } else{
-            N_min <- sum(N[[j]]) + 1
-          }
-          pow[[j]] <- results$power_bf
+        pow[[j]] <- current_power
+        prop_simple[[j]] <- results$prop_simplified
+
+        # update range of N_min and N_max
+        if (current_power >= eta) {
+          N_max <- sum(N[[j]]) - 1
+        } else {
+          N_min <- sum(N[[j]]) + 1
         }
+
+
 
         # evaluate power condition
         # if the current N is evaluated twice, or difference between N_min and N_max is 1 or less, condition is met
         if(length(N) > 2){
-          if(sum(N[[j-1]]) == sum(N[[j-2]]) | abs(N_max-N_min) <= 1) {
+          if(sum(N[[j-1]]) == sum(N[[j-2]]) || abs(N_max-N_min) <= 1) {
             stuck <- TRUE
           }
         }
 
         # if power level is close enough to desired power level, condition is met and the algorithm stops
-        if (round(abs(pow[[j]] - eta), 8) <= tol | stuck) {
+        if (round(abs(pow[[j]] - eta), 8) <= tol || stuck) {
           condition <- TRUE
           total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
         }
 
-        setTxtProgressBar(pb, j) # update progress bar
+        progress <- min(j/av_it, 0.99)
+        setTxtProgressBar(pb, progress) # update progress bar
         flush.console()          # clear console
         j <- j+1                 # update iteration number
       }
 
-    } else {
-      ##################### with sensitivity analysis ##########################
-      for (i in 1:3){
-        # Re-initialize
-        N <- list()
-        condition <- FALSE    # condition initially FALSE until power criterion is reached
-        stuck <- FALSE        # repeated sample size from previous iteration?
-        j <- 1                # iteration counter
-        pow <- list()         # initialize power
-        av_it <- round(log((N.max - N.min + 1), base=2)) # approximation of average numbers of iterations
-        N_min <- N.min
-        N_max <- N.max
-        # print info on sensitivity analysis
-        if(i==1){
-          cat("\n", "\n", "Sensitivity analysis for b = p/N_eff", "\n")
-        } else {
-          cat("\n", "\n", "Sensitivity analysis for b = ( p +", i, ")/N_eff", "\n")
-        }
+      # save results
+      res <- list(
+        evaluations = data.frame(
+          N = unlist(N),
+          power = round(unlist(pow), 2),
+          prop_simplified = unlist(prop_simple)
+        ),
+        final = list(
+          N = N[[j-1]],
+          power = round(pow[[j-1]], 3),
+          threshold_BF = BFthres,
+          threshold_PMP = PMPthres,
+          sensitivity = F
+        ),
+        hypotheses = list(
+          hypothesis = hypothesis,
+          comparison = method
+        ),
+        iterations = j,
+        runtime = round(total_time)
+      )
 
-        while(condition == F){
+    } else {
+
+      ##################### with sensitivity analysis ##########################
+      run_ssd <- function(i){
+
+        while(!condition){
 
           N_mid <- round((N_min + N_max)/2 - .1, digits = 0)         # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
           N_tot <- candidate_N[which.min(abs(candidate_N - N_mid))]
@@ -207,20 +196,12 @@ SSD_longit <- function(eta=.8,
           if (is.null(group.sizes)) { # balanced design
             N[[j]] <- N_tot
           } else { # unbalanced design via ratios
-            N_raw <- N_tot * group.sizes
-            N[[j]] <- floor(N_raw)
+            N[[j]] <- floor(N_tot * group.sizes)
           }
 
-          # set m according to iteration/difference between actual (pow) and desired power (eta)
-          if(m>=5000){
-            if(j==1 | abs(pow[[j]]-eta) > .1){ # in the first iteration or if the difference between pow and eta is at least .1, set m to 1000
-              current_m <- 1000
-            } else {
-              current_m <- m
-            }
-          } else {
-            current_m <- m
-          }
+          # set m according to distance to and desired power (eta)
+          current_m <- if (m >= 5000 && j != 1 && abs(pow[[j-1]] - eta) <= .1) {m} else {min(m, 1000)}
+
 
           # generate data and store BFs
           results <- get_power(attrition=attrition, params=params, m=current_m, N=N[[j]],
@@ -229,88 +210,67 @@ SSD_longit <- function(eta=.8,
                                cov=cov, var.e=var.e, eff.sizes=eff.sizes,
                                BFthres=BFthres, PMPthres=PMPthres, hypothesis=hypothesis)
 
-          # check if power is larger or smaller than desired power
-          if(method == "bfc" | method == "BFc" | method == "bf_c" | method == "BF_c"){
-            if(results$power_bfc >= eta){
-              N_max <- sum(N[[j]]) - 1
-            } else {
-              N_min <- sum(N[[j]]) + 1
-            }
-            pow[[j]] <- results$power_bfc
-          } else if(method == "pmp" | method == "PMP"){
-            if(results$power_pmp >= eta){
-              N_max <- sum(N[[j]]) - 1
-            } else {
-              N_min <- sum(N[[j]]) + 1
-            }
-            pow[[j]] <- results$power_pmp
-          } else if(method == "bf" | method == "BF"){
-            if(results$power_bf >= eta){
-              N_max <- sum(N[[j]]) - 1
-            } else{
-              N_min <- sum(N[[j]]) + 1
-            }
-            pow[[j]] <- results$power_bf
-          }
 
-          # Print progress
-          elapsed <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
+          # extract correct power
+          current_power <- switch(tolower(method),
+                                  "bfc" = results$power_bfc,
+                                  "bf_c" = results$power_bfc,
+                                  "pmp" = results$power_pmp,
+                                  "bf"  = results$power_bf)
 
-          if(is.null(group.sizes)){
-             cat(
-              sprintf("Iteration %d: N = %d | Power = %.3f | Elapsed: %.1f minutes \n",
-                      j, unlist(N[[j]]), pow[[j]], elapsed)
-            )
-          } else {
-            cat(
-              sprintf(
-                "Iteration %d: N_total = %d | N_g = (%s) | Power = %.3f | Elapsed: %.1f minutes \n",
-                j, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow[[j]], elapsed)
-            )
-          }
-
-          # Warn about simplified models due to too little observations
+          pow[[j]] <- current_power
           prop_simple[[j]] <- results$prop_simplified
-          if(prop_simple[[j]] >= .001) {
-            cat(
-              sprintf("%.1f%% of models required simplification (independent random effects) due to high attrition (too little observations) \n",
-                      prop_simple[[j]] * 100)
-            )
-          } else if(prop_simple[[j]] < .001 & prop_simple[[j]] > 0) {
-            cat(
-              "< 0.1% of models required simplification (independent random effects) due to high attrition (too little observations) \n"
-            )
+
+          # update range of N_min and N_max
+          if (current_power >= eta) {
+            N_max <- sum(N[[j]]) - 1
+          } else {
+            N_min <- sum(N[[j]]) + 1
           }
 
           # if the current N is evaluated twice, condition is met
           if(length(N) > 2){
-            if(sum(N[[j-1]]) == sum(N[[j-2]]) | abs(N_max-N_min) <= 1){
+            if(sum(N[[j-1]]) == sum(N[[j-2]]) || abs(N_max-N_min) <= 1){
               stuck <- TRUE
             }
           }
 
           # if power level is close enough to desired power level, condition is met and the algorithm stops
-          if(round(abs(pow[[j]] - eta), 8) <= tol | isTRUE(stuck)) {
+          if(round(abs(pow[[j]] - eta), 8) <= tol || stuck) {
             condition <- TRUE
             total_time <- as.numeric(difftime(Sys.time(), start_time, units = "mins"))
-            if(is.null(group.sizes)){ # output for equal group sizes
-              cat(
-                sprintf("\nConverged in %d iterations (%.1f minutes). Final N = %d (Power = %.3f) \n",
-                        j, total_time, unlist(N[[j]]), pow[[j]])
-              )
-            } else{ # output for unequal group sizes
-              cat(
-                sprintf("\nConverged in %d iterations (%.1f minutes). Final N_total = %d | N_g = (%s) | Power = %.3f \n",
-                        j, total_time, sum(N[[j]]), paste(N[[j]], collapse = ", "), pow[[j]])
-              )
-            }
           }
 
-          setTxtProgressBar(pb, j) # update progress bar
+          progress <- min(j/av_it, 0.99)
+          setTxtProgressBar(pb, progress) # update progress bar
           flush.console()
           j <- j+1                 # update iteration number
         }
+
+        # return result for each b
+        list(
+          evaluations = data.frame(
+            N = unlist(N),
+            power = round(unlist(pow), 2),
+            prop_simplified = unlist(prop_simple)
+          ),
+          final = list(
+            N = N[[j-1]],
+            power = round(pow[[j-1]], 3),
+            threshold_BF = BFthres,
+            threshold_PMP = PMPthres,
+            sensitivity = T
+          ),
+          hypotheses = list(
+            hypothesis = hypothesis,
+            comparison = method
+          ),
+          iterations = j,
+          runtime = round(total_time)
+        )
+
       }
+      res <- lapply(1:3, run_ssd)
     }
 
     # in case of interruption or error, reset parallel behavior
@@ -323,27 +283,8 @@ SSD_longit <- function(eta=.8,
     stop(e)  # Re-throw the error
   })
 
+  setTxtProgressBar(pb, 1) # set progressbar to maximum at the end of SSD
   close(pb) # close progressbar
-
-  # return results
-  res <- list(
-    evaluations = data.frame(
-      N = unlist(N),
-      power = round(unlist(pow), 2),
-      prop_simplified = unlist(prop_simple)
-    ),
-    final = list(
-      N = N[[j-1]],
-      power = round(pow[[j-1]], 3),
-      threshold = BFthres
-    ),
-    hypotheses = list(
-      hypothesis = hypothesis,
-      comparison = method
-    ),
-    iterations = j,
-    runtime = round(total_time)
-  )
 
   # print results
   print_results_SSD_longit(res)

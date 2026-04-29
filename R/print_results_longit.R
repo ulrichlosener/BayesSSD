@@ -1,44 +1,118 @@
-############################## PRINT RESULTS #################################
+#' Print results for the function SSD_longit
+#'
 #'@title print results for SSD_longit
-#'@description print results
-#'@param result object containing the result of SSD_longit
+#'@description print and format results from the SSD_longit function.
+#'@param result list containing the result of SSD_longit
 #'@export
 
 print_results_SSD_longit <- function(result) {
-  title <- "Final sample size"
-  cat(paste("\n", title, "\n", sep = ""))
-  row <- paste(rep("=", nchar(title)), collapse = "")
-  cat(row, "\n")
-  if (result$hypotheses$comparison == "bfc"  |
-      result$hypotheses$comparison == "BFc"  |
-      result$hypotheses$comparison == "bf_c" |
-      result$hypotheses$comparison == "BF_c") {   # Print for BFc
-    cat("Hypotheses:", "\n")
-    cat("    H1:", result$hypotheses$hypothesis, "\n")
-    cat("    Hc: not H1\n")
-    cat("Using  a total of N =", sum(result$final$N), "Participants\n")
-    cat("P (BF_1c >", result$final$threshold, "| H1) = ", result$final$power, "\n")
-  } else {                                        # NOT YET IMPLEMENTED
-    n_object <- length(object_result)
-    b_number <- n_object - 3
-    results_matrix <- matrix(NA, nrow = b_number, ncol = 5)
-    results_matrix[, 1] <- seq(b_number)
-    object_result_b <- object_result[1:b_number]
-    results_matrix[, 2] <- round(as.numeric(head(unlist(lapply(object_result_b, `[[`, 1)), b_number))) #n1
-    results_matrix[, 3] <- round(as.numeric(head(unlist(lapply(object_result_b, `[[`, 2)), b_number))) #n2
-    results_matrix[, 4] <- round(as.numeric(head(unlist(lapply(object_result_b, `[[`, 3)), b_number)), 3) #BF_01
-    results_matrix[, 5] <- round(as.numeric(head(unlist(lapply(object_result_b, `[[`, 4)), b_number)), 3) #BF_10
-    colnames(results_matrix) <- c("b", "n1", "n2", paste("P(BF.01 >", object_result[[(n_object - 1)]][[1]], "| H0) > ", object_result[[n_object]][[1]], sep = " "),
-                                  paste("P(BF.10 >", object_result[[(n_object - 1)]][[2]], "| H1) > ", object_result[[n_object]][[2]], sep = " "))
 
-    cat("Hypotheses:", "\n")
-    cat("    H0:", object_result[[b_number + 1]][[1]], "\n")
-    cat("    H1:", object_result[[b_number + 1]][[2]], "\n")
+  ############################### without sensitivity analysis ###############################
+  if(length(result) != 3) {
+    title <- "Final sample size"
+    cat(paste("\n", title, "\n", sep = ""))
+    row <- paste(rep("=", nchar(title)), collapse = "")
+    cat(row, "\n")
+    # print for BFc
+    if (tolower(result$hypotheses$comparison) == "bfc"  |
+        tolower(result$hypotheses$comparison) == "bf_c") {
+      cat("Hypotheses:\n")
+      cat("    H1:", result$hypotheses$hypothesis, "\n")
+      cat("    Hc: not H1\n")
+      cat("Using a total of N =", sum(result$final$N), "Participants\n")
+      cat("Power = P(BF_1c >", result$final$threshold_BF, "| H1) =", result$final$power, "\n")
+      # print for BF
+    } else if (tolower(result$hypotheses$comparison) == "bf") {
+      cat("Hypotheses:\n")
+      cat("    H1:", result$hypotheses$hypothesis[[1]], "\n")
+      cat("    H2:", result$hypotheses$hypothesis[[2]], "\n")
+      cat("Using a total of N =", sum(result$final$N), "Participants\n")
+      cat("Power = P(BF_12 >", result$final$threshold_BF, "| H1) =", result$final$power, "\n")
+      # print for PMP
+    } else if(tolower(result$hypotheses$comparison) == "pmp") {
+      cat("Hypotheses:\n")
+      cat(paste0(
+        sprintf("    H%d: %s", seq_along(result$hypotheses$hypothesis), result$hypotheses$hypothesis),
+        collapse = "\n"
+      ), "\n")
+      cat("Using a total of N =", sum(result$final$N), "Participants\n")
+      cat("Power = P(PMP_H1 >", result$final$threshold_PMP, "| H1) =", result$final$power, "\n")
+    }
 
-    cat("***********************************************************************", "\n")
-    print(format(results_matrix, justify = "centre"))
-    cat("***********************************************************************", "\n")
-    cat("n1: Cluster sizes", "\n")
-    cat("n2: Number of clusters", "\n")
+  ############################### with sensitivity analysis ##################################
+  } else {
+    title <- "Final sample size with sensitivity analysis"
+    cat(paste("\n", title, "\n", sep = ""))
+    row <- paste(rep("=", nchar(title)), collapse = "")
+    row2 <- paste(rep("-", nchar(title)), collapse = "")
+    cat(row, "\n")
+
+      # print for BFc
+    if (tolower(result[[1]]$hypotheses$comparison) == "bfc"  |
+        tolower(result[[1]]$hypotheses$comparison) == "bf_c") {
+      cat("Hypotheses:\n")
+      cat("    H1:", result[[1]]$hypotheses$hypothesis, "\n")
+      cat("    Hc: not H1\n")
+      cat(row2, "\n")
+        # for b1
+      cat("For b = 1/N_eff:\n")
+      cat("Using a total of N =", sum(result[[1]]$final$N), "Participants\n")
+      cat("Power = P(BF_1c >", result[[1]]$final$threshold_BF, "| H1) =", result[[1]]$final$power, "\n")
+      cat(row2, "\n")
+        # for b2
+      cat("For b = 2/N_eff:\n")
+      cat("Using a total of N =", sum(result[[2]]$final$N), "Participants\n")
+      cat("Power = P(BF_1c >", result[[2]]$final$threshold_BF, "| H1) =", result[[2]]$final$power, "\n")
+      cat(row2, "\n")
+        # for b3
+      cat("For b = 3/N_eff:\n")
+      cat("Using a total of N =", sum(result[[3]]$final$N), "Participants\n")
+      cat("Power = P(BF_1c >", result[[3]]$final$threshold_BF, "| H1) =", result[[3]]$final$power, "\n")
+      cat(row2, "\n")
+        # print for BF
+    } else if (tolower(result[[1]]$hypotheses$comparison) == "bf") {
+      cat("Hypotheses:\n")
+      cat("    H1:", result[[1]]$hypotheses$hypothesis[[1]], "\n")
+      cat("    H2:", result[[1]]$hypotheses$hypothesis[[2]], "\n")
+      cat(row2, "\n")
+        # for b1
+      cat("For b = 1/N_eff:\n")
+      cat("    Using a total of N =", sum(result[[1]]$final$N), "Participants\n")
+      cat("    Power = P(BF_12 >", result[[1]]$final$threshold_BF, "| H1) =", result[[1]]$final$power, "\n")
+      cat(row2, "\n")
+        # for b2
+      cat("For b = 2/N_eff:\n")
+      cat("    Using a total of N =", sum(result[[2]]$final$N), "Participants\n")
+      cat("    Power = P(BF_12 >", result[[2]]$final$threshold_BF, "| H1) =", result[[2]]$final$power, "\n")
+      cat(row2, "\n")
+        # for b3
+      cat("For b = 3/N_eff:\n")
+      cat("    Using a total of N =", sum(result[[3]]$final$N), "Participants\n")
+      cat("    Power = P(BF_12 >", result[[3]]$final$threshold_BF, "| H1) =", result[[3]]$final$power, "\n")
+      cat(row2, "\n")
+      # print for PMP
+    } else if(tolower(result[[1]]$hypotheses$comparison) == "pmp") {
+      cat("Hypotheses:\n")
+      cat(paste0(
+        sprintf("    H%d: %s", seq_along(result[[1]]$hypotheses$hypothesis), result[[1]]$hypotheses$hypothesis),
+        collapse = "\n"
+      ), "\n")
+      cat(row2, "\n")
+      # for b1
+      cat("For b = 1/N_eff:\n")
+      cat("    Using a total of N =", sum(result[[1]]$final$N), "Participants\n")
+      cat("    Power = P(PMP_H1 >", result[[1]]$final$threshold_PMP, "| H1) =", result[[1]]$final$power, "\n")
+      cat(row2, "\n")
+      # for b2
+      cat("For b = 2/N_eff:\n")
+      cat("    Using a total of N =", sum(result[[2]]$final$N), "Participants\n")
+      cat("    Power = P(PMP_H1 >", result[[2]]$final$threshold_PMP, "| H1) =", result[[2]]$final$power, "\n")
+      cat(row2, "\n")
+      # for b3
+      cat("For b = 3/N_eff:\n")
+      cat("    Using a total of N =", sum(result[[3]]$final$N), "Participants\n")
+      cat("    Power = P(PMP_H1 >", result[[3]]$final$threshold_PMP, "| H1) =", result[[3]]$final$power, "\n")
+      cat(row2, "\n")
+    }
   }
 }
