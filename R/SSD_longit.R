@@ -162,7 +162,7 @@ SSD_longit <- function(eta=.8,
       }
 
       # save results
-      res <- list(
+      (res <- list(
         evaluations = data.frame(
           N = unlist(N),
           power = round(unlist(pow), 2),
@@ -181,7 +181,7 @@ SSD_longit <- function(eta=.8,
         ),
         iterations = j,
         runtime = round(total_time)
-      )
+      ))
 
     } else {
 
@@ -270,7 +270,7 @@ SSD_longit <- function(eta=.8,
         )
 
       }
-      res <- lapply(1:3, run_ssd)
+      (res <- lapply(1:3, run_ssd))
     }
 
     # in case of interruption or error, reset parallel behavior
