@@ -162,7 +162,7 @@ SSD_longit <- function(eta=.8,
       }
 
       # save results
-      (res <- list(
+      res <- list(
         evaluations = data.frame(
           N = unlist(N),
           power = round(unlist(pow), 2),
@@ -181,7 +181,7 @@ SSD_longit <- function(eta=.8,
         ),
         iterations = j,
         runtime = round(total_time)
-      ))
+      )
 
     } else {
 
@@ -244,6 +244,7 @@ SSD_longit <- function(eta=.8,
           progress <- min(j/av_it, 0.99)
           setTxtProgressBar(pb, progress) # update progress bar
           flush.console()
+          cat("  of analysis", i, "/ 3")
           j <- j+1                 # update iteration number
         }
 
@@ -270,7 +271,7 @@ SSD_longit <- function(eta=.8,
         )
 
       }
-      (res <- lapply(1:3, run_ssd))
+      res <- lapply(1:3, run_ssd)
     }
 
     # in case of interruption or error, reset parallel behavior
@@ -286,8 +287,9 @@ SSD_longit <- function(eta=.8,
   setTxtProgressBar(pb, 1) # set progressbar to maximum at the end of SSD
   close(pb) # close progressbar
 
-  # print results
+  # print and return results
   print_results_SSD_longit(res)
+  return(res)
 }
 
 # END OF FUNCTION --------------------------------------------------------------
