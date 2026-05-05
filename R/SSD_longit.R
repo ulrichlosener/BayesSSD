@@ -180,7 +180,7 @@ SSD_longit <- function(eta=.8,
           comparison = method
         ),
         iterations = j,
-        runtime = round(total_time)
+        runtime_minutes = round(total_time)
       )
 
     } else {
@@ -267,7 +267,7 @@ SSD_longit <- function(eta=.8,
             comparison = method
           ),
           iterations = j,
-          runtime = round(total_time)
+          runtime_minutes = round(total_time)
         )
 
       }
