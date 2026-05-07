@@ -187,15 +187,15 @@ get_bf <- function(N=100,
 
   # in case of identifiability issues due to high attrition, simplify the model (constrain random effects to be independent)
   model <- tryCatch({
-    lme4::lmer(formula = y ~ -1 + treat:t + treat + (1 + t | id),
+    lme4::lmer(formula = y ~ treat:t + (1 + t | id),
                data = dat,
                REML = F,
                control = lme4::lmerControl(calc.derivs = F))
   }, error = function(e) {
     if (grepl("number of observations.*number of random effects", e$message)) {
-      simplified <<- TRUE # indicate when simplidication happens
+      simplified <<- TRUE # indicate when simplification happens
       tryCatch({
-        lme4::lmer(formula = y ~ -1 + treat:t + treat + (1 + t || id), # independent random effects
+        lme4::lmer(formula = y ~ treat:t + (1 + t || id), # independent random effects
                    data = dat,
                    REML = F,
                    control = lme4::lmerControl(calc.derivs = F))
@@ -204,7 +204,7 @@ get_bf <- function(N=100,
   })
 
   # check for rank deficiency
-  expected_params <- 2 + (n_cond-1) * 2  # Intercept + t + (k-1) treat + (k-1) t:treat
+  expected_params <- 1 + n_cond # intercept + k*t:treat
   if(length(model@beta) < expected_params) { # in case the model is still not identifiable, throw error
     stop("Rank deficiency due to high attrition rate. Consider lowering attrition rate.")
   }
