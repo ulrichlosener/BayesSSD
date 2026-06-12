@@ -51,29 +51,29 @@ get_power <- function(N=100,
 
 
   suppressWarnings({ # suppress warning "package 'future' was built under R version 4.4.3"
-  suppressMessages({ # supress messages about singular fit in MLMs
+    suppressMessages({ # supress messages about singular fit in MLMs
 
-  future::plan(future::sequential)  # Reset plan to avoid unexpected leftover parallel behavior
+    future::plan(future::sequential)  # Reset plan to avoid unexpected leftover parallel behavior
 
-  future::plan(future::multisession, workers = future::availableCores() - 1)  # Use all but one core
+    future::plan(future::multisession, workers = future::availableCores() - 1)  # Use all but one core
 
-  Ns <- replicate(m, N, simplify = FALSE)  # object to use lapply on with first argument for the function (N)
+    Ns <- replicate(m, N, simplify = FALSE)  # object to use lapply on with first argument for the function (N)
 
-  # Run simulation m times
-    bfs <- future.apply::future_lapply(
-      Ns,
-      function(ss){
-        get_bf(ss,
-               attrition=attrition,
-               params=params, hypothesis=hypothesis, t.points=t.points,
-               var.u0=var.u0, var.u1=var.u1, cov=cov, var.e=var.e,
-               eff.sizes=eff.sizes, fraction=fraction, log.grow=log.grow)
-      },
-      future.seed = TRUE
-    )
+    # Run simulation m times
+      bfs <- future.apply::future_lapply(
+        Ns,
+        function(ss){
+          get_bf(ss,
+                 attrition=attrition,
+                 params=params, hypothesis=hypothesis, t.points=t.points,
+                 var.u0=var.u0, var.u1=var.u1, cov=cov, var.e=var.e,
+                 eff.sizes=eff.sizes, fraction=fraction, log.grow=log.grow)
+        },
+        future.seed = TRUE
+      )
 
-  future::plan(future::sequential) # Reset plan to avoid unexpected parallel behavior later
-  })
+    future::plan(future::sequential) # Reset plan to avoid unexpected parallel behavior later
+    })
   })
   # extract number of simplified models due to identification issues
   prop_simplified <- mean(unlist(sapply(bfs, function(x) {x[4]})))
@@ -86,24 +86,22 @@ get_power <- function(N=100,
       as.numeric(x[[1]])
     }
   }, numeric(1))
+
   pmp <- vapply(bfs, function(x) {
     if (length(x[[2]]) == 0) {
       NA_real_
     } else {
-      as.numeric(x[[1]])
+      as.numeric(x[[2]])
     }
   }, numeric(1))
+
   bf <- vapply(bfs, function(x) {
     if (length(x[[3]]) == 0) {
       NA_real_
     } else {
-      as.numeric(x[[1]])
+      as.numeric(x[[3]])
     }
   }, numeric(1))
-
-  # bfc <- vapply(bfs, function(x) {as.numeric(x[[1]])}, numeric(1))
-  # pmp <- vapply(bfs, function(x) {as.numeric(x[[2]])}, numeric(1))
-  # bf <- vapply(bfs, function(x) {as.numeric(x[[3]])}, numeric(1))
 
   power_bfc <- mean(bfc>BFthres, na.rm = T)
   power_pmp <- mean(pmp>PMPthres, na.rm = T)
