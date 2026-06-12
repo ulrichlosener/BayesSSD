@@ -103,6 +103,7 @@ get_power <- function(N=100,
     }
   }, numeric(1))
 
+  # calculate power
   power_bfc <- mean(bfc>BFthres, na.rm = T)
   power_pmp <- mean(pmp>PMPthres, na.rm = T)
   power_bf <- mean(bf>BFthres, na.rm = T)

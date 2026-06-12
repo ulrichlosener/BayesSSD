@@ -34,7 +34,7 @@ get_neff <- function(model, surviv) {
   n <- length(t.points)
 
   # Extract number of treatment conditions
-  treat_levels <- unique(model@frame[["treat"]])
+  treat_levels <- levels(model@frame[["treat"]])
   n_cond <- length(treat_levels)
 
   # Extract model components - optimized extraction

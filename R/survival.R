@@ -30,33 +30,28 @@ survival <- function(distributions, params, t.points) {
   # Define distribution functions
   dist_functions <- list(
     weibull = function(pars, time) {
-      if (length(pars) < 2) stop("Weibull needs omega, gamma")
+      if (length(pars) < 2) stop("Weibull needs omega, gamma.")
       (1-pars[1])^(time^pars[2])
     },
     modified_weibull = function(pars, time) {
-      if (length(pars) < 3) stop("Modified Weibull needs omega, gamma, kappa")
+      if (length(pars) < 3) stop("Modified Weibull needs omega, gamma, kappa.")
       exp(time^pars[2]*exp(pars[3]*(time-1))*log(1-pars[1]))
     },
     linear_exponential = function(pars, time) {
-      if (length(pars) < 2) stop("Linear-exponential needs omega, gamma")
+      if (length(pars) < 2) stop("Linear-exponential needs omega, gamma.")
       exp((.5*pars[2]+log(1-pars[1]))*time - .5*pars[2]*time^2)
     },
     log_logistic = function(pars, time) {
-      if (length(pars) < 2) stop("Log-logistic needs omega, gamma")
+      if (length(pars) < 2) stop("Log-logistic needs omega, gamma.")
       (1-pars[1])/((1-pars[1]) + pars[1]*time^pars[2])
     },
     gompertz = function(pars, time) {
-      if (length(pars) < 2) stop("Gompertz needs omega, gamma")
+      if (length(pars) < 2) stop("Gompertz needs omega, gamma.")
       exp((log(1-pars[1])/(exp(pars[2])-1))*(exp(pars[2]*time)-1))
     },
-    nonparametric = function(pars, time) {
-      if (time[1] == 0) {
-        if (length(pars) < max(time)+1) stop("Need ", max(time)+1, " params for t=0 start")
-        pars
-      } else {
-        if (length(pars) < max(time)) stop("Need ", max(time), " params for t=1 start")
-        pars
-      }
+    non-parametric = function(pars, time) {
+      if (length(pars) != length(t.points)) stop("Non-parametric needs as many 'params' as 't.points'.")
+      pars
     }
   )
 

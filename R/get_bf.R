@@ -34,10 +34,9 @@ get_bf <- function(N=100,
 
   # determine number of conditions from hypotheses
   cond_letters <- unique(unlist(lapply(hypothesis, function(h) {
-    unique(unlist(strsplit(gsub("[^a-z]", "", tolower(h)), "")))
+    regmatches(h, gregexpr("[A-Za-z][A-Za-z0-9_]*", h))
   })))
   n_cond <- length(cond_letters)      # extract the number of conditions
-  cond_letters <- sort(cond_letters)  # ensure consistent ordering
 
   # check consistency of number of conditions in arguments
   if(length(eff.sizes) != n_cond) {

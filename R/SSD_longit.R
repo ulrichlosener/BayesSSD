@@ -66,7 +66,7 @@ SSD_longit <- function(eta=.8,
     if(var.u0<0 | var.u1<0 | var.e<0) {stop("all variance components must be positive.")}
     if(BFthres<0) {stop("'BFthres' must be positive.")}
     if(m<1000) {message("Results with less than m=1000 generated datasets per iteration can be unreliable.")}
-    if((method=="bf" | method=="BF") & (length(hypothesis)!=2)) {stop("Method 'bf' requires exactly two hypotheses.")}
+    if((tolower(method)=="bf") && (length(hypothesis)!=2)) {stop("Method 'bf' requires exactly two hypotheses.")}
     if (!is.null(group.sizes)) {
       if (length(group.sizes) != length(eff.sizes)) {stop("Length of 'group.sizes' must match number of conditions.")}
       if (any(group.sizes <= 0)) {stop("'group.sizes' must contain only positive values.")}
@@ -89,17 +89,19 @@ SSD_longit <- function(eta=.8,
     condition <- FALSE                                        # condition initially FALSE until power criterion is reached
     stuck <- FALSE                                            # indicator if algorithm is stuck on repeated sample size
     j <- 1                                                    # iteration counter
-    av_it <- round(log(((N.max - N.min + 1)/n_cond), base=2)) # approximation of average numbers of iterations
+    av_it <- round(log((N.max - N.min + 1), base=2))          # approximation of average numbers of iterations
     pb <- txtProgressBar(min = 0, max = 1, style = 3)         # progress bar
     pow <- list()                                             # initialize power
     prop_simple <- list()                                     # initialize proportion of simplified models
     N_min <- N.min                                            # initialize lower bound of sample sizes
     N_max <- N.max                                            # initialize upper bound of sample sizes
-
-    start_time <- Sys.time()
+    group.sizes <- group.sizes / sum(group.sizes)             # set group.sizes to correct scale if necessary
 
     if(!sensitivity){
       ################### without sensitivity analysis #########################
+
+      start_time <- Sys.time()
+
       while(!condition){
 
         N_mid <- round((N_min + N_max)/2 - .1, digits = 0)         # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
@@ -108,7 +110,6 @@ SSD_longit <- function(eta=.8,
         if (is.null(group.sizes)) { # balanced design
           N[[j]] <- N_tot
         } else { # unbalanced design via ratios
-          group.sizes <- group.sizes / sum(group.sizes)            # set group.sizes to correct scale if necessary
           N[[j]] <- floor(N_tot * group.sizes)
         }
 
@@ -144,7 +145,7 @@ SSD_longit <- function(eta=.8,
         # evaluate power condition
         # if the current N is evaluated twice, or difference between N_min and N_max is 1 or less, condition is met
         if(length(N) > 2){
-          if(sum(N[[j-1]]) == sum(N[[j-2]]) || abs(N_max-N_min) <= 1) {
+          if(sum(N[[j]]) == sum(N[[j-1]]) || abs(N_max-N_min) <= 1) {
             stuck <- TRUE
           }
         }
@@ -186,6 +187,9 @@ SSD_longit <- function(eta=.8,
     } else {
 
       ##################### with sensitivity analysis ##########################
+
+      start_time <- Sys.time()
+
       run_ssd <- function(i){
 
         while(!condition){
@@ -230,7 +234,7 @@ SSD_longit <- function(eta=.8,
 
           # if the current N is evaluated twice, condition is met
           if(length(N) > 2){
-            if(sum(N[[j-1]]) == sum(N[[j-2]]) || abs(N_max-N_min) <= 1){
+            if(sum(N[[j]]) == sum(N[[j-1]]) || abs(N_max-N_min) <= 1){
               stuck <- TRUE
             }
           }
@@ -246,6 +250,9 @@ SSD_longit <- function(eta=.8,
           flush.console()
           cat("  of analysis", i, "/ 3")
           j <- j+1                 # update iteration number
+          progress <- min(j/av_it, 0.99)
+          setTxtProgressBar(pb, progress) # update progress bar
+          flush.console()          # clear console
         }
 
         # return result for each b
