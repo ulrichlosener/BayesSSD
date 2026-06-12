@@ -154,30 +154,29 @@ get_bf <- function(N=100,
   ids <- unique(dat$id)
 
   # for each subject, find the first dropout time (if any)
-  first_dropout <- tapply(
-    1:nrow(dat),
-    dat$id,
-    function(idx) {
-      hazards <- dat$hazard[idx]
-      # Generate dropout decisions for all timepoints at once
-      dropout <- rbinom(n-1, 1, hazards[-n])
-      # Find the first dropout (returns NA if no dropout)
-      which(dropout == 1)[1] + 1  # +1 because hazard[t] affects t+1
-    },
-    simplify = FALSE
+  dropout_indices <- unlist(
+    tapply(
+      1:nrow(dat),
+      dat$id,
+      function(idx) {
+        hazards <- dat$hazard[idx]
+        dropout <- rbinom(n - 1, 1, hazards[-n])
+        fd <- which(dropout == 1)[1]
+
+        if (is.na(fd)) {
+          return(integer(0))
+        }
+
+        fd <- fd + 1   # hazard[t] affects t+1
+        idx[fd:length(idx)]
+      },
+      simplify = FALSE
+    ),
+    use.names = FALSE
   )
 
-  # mark missing values and consecutive timepoints
+  # delete subsequent observations after dropout
   dat$mis <- 0
-  dropout_indices <- unlist(
-    lapply(ids, function(id) {
-      fd <- first_dropout[[as.character(id)]]
-      if (!is.na(fd)) {
-        idx <- which(dat$id == id)
-        seq(idx[fd], max(idx), by = 1)
-      }
-    })
-  ) # remove marked y-values
   dat$mis[dropout_indices] <- 1
   dat$y[dat$mis == 1] <- NA
 

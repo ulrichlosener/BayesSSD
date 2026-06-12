@@ -28,7 +28,6 @@
 #' BFthres=5, fraction=1, log.grow=F, seed=NULL,
 #' hypothesis="a<b<c", PMPthres=.9)
 
-
 get_power <- function(N=100,
                       hypothesis="a<b<c",
                       eff.sizes=c(0, .5, .8),
@@ -55,7 +54,9 @@ get_power <- function(N=100,
 
     future::plan(future::sequential)  # Reset plan to avoid unexpected leftover parallel behavior
 
-    future::plan(future::multisession, workers = future::availableCores() - 1)  # Use all but one core
+    if (!inherits(future::plan(), "multisession")){ # set up parallel pool only if not inherited from previous iteration
+      future::plan(future::multisession, workers = future::availableCores() - 1)  # Use all but one core
+    }
 
     Ns <- replicate(m, N, simplify = FALSE)  # object to use lapply on with first argument for the function (N)
 
@@ -76,7 +77,7 @@ get_power <- function(N=100,
     })
   })
   # extract number of simplified models due to identification issues
-  prop_simplified <- mean(unlist(sapply(bfs, function(x) {x[4]})))
+  prop_simplified <- mean(vapply(bfs, function(x) isTRUE(x[[4]]), logical(1)))
 
   # extract BFs and PMPs, handling NULL cases without error
   bfc <- vapply(bfs, function(x) {

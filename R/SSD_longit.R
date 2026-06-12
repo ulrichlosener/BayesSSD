@@ -84,8 +84,6 @@ SSD_longit <- function(eta=.8,
     N <- list()
     n_cond <- length(eff.sizes)                              # extract number of conditions
 
-    candidate_N <- seq(from = N.min, to = N.max, by = 1)
-
     condition <- FALSE                                        # condition initially FALSE until power criterion is reached
     stuck <- FALSE                                            # indicator if algorithm is stuck on repeated sample size
     j <- 1                                                    # iteration counter
@@ -95,7 +93,9 @@ SSD_longit <- function(eta=.8,
     prop_simple <- list()                                     # initialize proportion of simplified models
     N_min <- N.min                                            # initialize lower bound of sample sizes
     N_max <- N.max                                            # initialize upper bound of sample sizes
-    group.sizes <- group.sizes / sum(group.sizes)             # set group.sizes to correct scale if necessary
+    if(!is.null(group.sizes)){
+      group.sizes <- group.sizes / sum(group.sizes)             # set group.sizes to correct scale if necessary
+    }
 
     if(!sensitivity){
       ################### without sensitivity analysis #########################
@@ -105,12 +105,11 @@ SSD_longit <- function(eta=.8,
       while(!condition){
 
         N_mid <- round((N_min + N_max)/2 - .1, digits = 0)         # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
-        N_tot <- candidate_N[which.min(abs(candidate_N - N_mid))]
 
         if (is.null(group.sizes)) { # balanced design
-          N[[j]] <- N_tot
+          N[[j]] <- N_mid
         } else { # unbalanced design via ratios
-          N[[j]] <- floor(N_tot * group.sizes)
+          N[[j]] <- floor(N_mid * group.sizes)
         }
 
         # set m according to distance to desired power
@@ -195,17 +194,15 @@ SSD_longit <- function(eta=.8,
         while(!condition){
 
           N_mid <- round((N_min + N_max)/2 - .1, digits = 0)         # current N (N_mid) is the mid point between N.min and N.max, rounded to the lower number
-          N_tot <- candidate_N[which.min(abs(candidate_N - N_mid))]
 
           if (is.null(group.sizes)) { # balanced design
-            N[[j]] <- N_tot
+            N[[j]] <- N_mid
           } else { # unbalanced design via ratios
-            N[[j]] <- floor(N_tot * group.sizes)
+            N[[j]] <- floor(N_mid * group.sizes)
           }
 
           # set m according to distance to and desired power (eta)
           current_m <- if (m >= 5000 && j != 1 && abs(pow[[j-1]] - eta) <= .1) {m} else {min(m, 1000)}
-
 
           # generate data and store BFs
           results <- get_power(attrition=attrition, params=params, m=current_m, N=N[[j]],

@@ -83,8 +83,6 @@ get_neff <- function(model, surviv) {
     V <- Z_sub %*% D %*% t(Z_sub) + sigma2 * diag(k)
 
     # Handle diagonal matrix creation safely for large matrices
-    W <- diag(x = diag(V), nrow = k, ncol = k)  # Safer diagonal matrix creation
-
     V_inverses[[k]] <- chol2inv(chol(V))  # Fast and  stable inverse
     W_inverses[[k]] <- diag(1/diag(V), nrow = k)  # Direct computation for diagonal
   }
