@@ -2,7 +2,9 @@
 
 This is the repository for the R package `BayesSSD`, which was created using R version 4.5.1. The `BayesSSD` package performs simulation-based Bayesian sample size determination for multilevel models. The authors are Ulrich Lösener and Camila Barragán Ibáñez at Utrecht University.
 
-The function `SSD_longit` performs simulation-based Bayesian sample size determination for longitudinal experiments. Various patterns of attrition (drop-out) can be taken into account by means of a number of parametric and non-parametric survival functions. 
+The function `SSD_longit` performs simulation-based Bayesian sample size determination (SSD) for longitudinal experiments. Various patterns of attrition (drop-out) can be taken into account by means of a number of parametric and non-parametric survival functions. 
+
+The function `SSD_crt_null` performs Bayesian SSD for cluster randomized trials when evaluating the null hypothesis, while `SSD_crt_inform` can be employed for SSD for an informative hypothesis (e.g., of the form $\mathcal{H}: \beta_1>\beta_2>\beta_3$).
 
 You can download the package from GitHub via `devtools::install_github("ulrichlosener/BayesSSD")`.
 
