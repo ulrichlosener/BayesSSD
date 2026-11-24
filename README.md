@@ -2,11 +2,11 @@
 
 This is the repository for the R package `BayesSSD`, which was created using R version 4.5.1. The `BayesSSD` package performs simulation-based Bayesian sample size determination for multilevel models. The authors are Ulrich Lösener and Camila Barragán Ibáñez at Utrecht University.
 
-The function `SSD_longit` performs simulation-based Bayesian sample size determination for longitudinal experiments. Various patterns of attrition (drop-out) can be taken into account by means of a number of parametric and non-parametric survival functions. 
+The function `SSD_longit` performs simulation-based Bayesian sample size determination (SSD) for longitudinal experiments. Various patterns of attrition (drop-out) can be taken into account by means of a number of parametric and non-parametric survival functions. 
+
+The function `SSD_crt_null` performs Bayesian SSD for cluster randomized trials when evaluating the null hypothesis, while `SSD_crt_inform` can be employed for SSD for an informative hypothesis (e.g., of the form $\mathcal{H}: \beta_1>\beta_2>\beta_3$).
 
 You can download the package from GitHub via `devtools::install_github("ulrichlosener/BayesSSD")`.
-
-One accompanying paper for the `BayesSSD` package authored by Ulrich Lösener and Mirjam Moerbeek is called "Bayesian Sample Size Determination for Longitudinal Trials with Attrition - the BayesSSD Package" and is currently under review at *Advances in Methods and Practices in Psychological Science*.
 
 ## Installation
 To install the latest release version of `BayesSSD` from GitHub follow these steps:
@@ -20,11 +20,24 @@ pak::pak("urlichlosener/BayesSSD", upgrade=FALSE)
 library(BayesSSD)                                                    # load BayesSSD package
 ```
 
-## Citing BayesSSD
+## Citing the package
 
 You can cite this R-package with the following citation:
 
  Lösener, U. , Barragan I., C. N. (2025). BayesSSD: Bayesian Sample Size Determination for Multilevel Models. (Version 0.2.0), R package.
+
+## Literature on BayesSSD
+
+A number of papers have been published that refer to the method employed in this package or the package itself. Articles include the following:
+
+-   Lösener, U., & Moerbeek, M. (2025). Bayesian sample size determination for longitudinal intervention studies with linear and log-linear growth. *Behavior Research Methods, 57*(9), 239.
+
+-   Barragan Ibañez, C. N., Lösener, U., Moeteke, N., & Moerbeek, M. (2026). Design and analysis of behavioral intervention studies: A Bayesian approach. *Plos one, 21*(2), e0342163.
+
+-   Ibanez, C. N. B., & Moerbeek, M. (2026). Method for sample size determination for cluster-randomized trials using the Bayes factor. *Journal of Educational and Behavioral Statistics, 51*(4), 875-907.
+
+-   Lösener, U., & Moerbeek, M. (2026). Bayesian Sample-Size Determination for Longitudinal Trials With Attrition: The `BayesSSD` Package. *Advances in Methods and Practices in Psychological Science, 9*(3), 25152459261463494.
+
 
 ## Contributing and Contact Information
 
