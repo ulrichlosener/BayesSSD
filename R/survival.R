@@ -49,7 +49,7 @@ survival <- function(distributions, params, t.points) {
       if (length(pars) < 2) stop("Gompertz needs omega, gamma.")
       exp((log(1-pars[1])/(exp(pars[2])-1))*(exp(pars[2]*time)-1))
     },
-    non-parametric = function(pars, time) {
+    nonparametric = function(pars, time) {
       if (length(pars) != length(t.points)) stop("Non-parametric needs as many 'params' as 't.points'.")
       pars
     }
