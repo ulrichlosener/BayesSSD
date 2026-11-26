@@ -293,7 +293,7 @@ SSD_longit <- function(eta=.8,
 
   # print and return results
   print_results_SSD_longit(res)
-  return(res)
+  return(invisible(res))
 }
 
 # END OF FUNCTION --------------------------------------------------------------
